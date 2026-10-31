@@ -1,0 +1,116 @@
+/* Global resets — ported from the design <style> block (everything after the token blocks). */
+html,
+body {
+  margin: 0;
+  color: var(--ink);
+  font:
+    14px/1.5 'Geist',
+    system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(1100px 600px at 75% -18%, oklch(0.88 0.19 122 / 0.12), transparent 60%);
+}
+body[data-theme='dark'] {
+  background-image: radial-gradient(1100px 600px at 75% -18%, oklch(0.9 0.19 122 / 0.07), transparent 60%);
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(oklch(0.6 0.02 250 / 0.2) 1px, transparent 1.3px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(#000, transparent 70%);
+  mask-image: linear-gradient(#000, transparent 70%);
+}
+* {
+  box-sizing: border-box;
+}
+h1,
+h2,
+h3 {
+  font-stretch: 115%;
+}
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--accent-hover);
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+input:focus,
+select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  outline: none;
+}
+select option {
+  background: var(--surface);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: oklch(0.9 0.19 122 / 0.4);
+}
+
+/* ---- Additions for the React port (not in the design file) ---- */
+#root {
+  min-height: 100vh;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -64px;
+  z-index: 300;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+  text-decoration: none;
+  transition: top var(--dur-2) var(--ease-out);
+}
+.skip-link:focus {
+  top: 12px;
+  color: var(--bg);
+}
+/* Reduced motion: no smooth scroll, no CSS transitions. JS motion is handled in src/motion. */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

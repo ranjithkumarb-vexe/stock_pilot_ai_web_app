@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="StockPilot AI: source-checked research briefs, rule-based risk checks and paper trading."
+    />
+    <meta name="theme-color" content="#14181f" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..700&family=Archivo:wdth,wght@62..125,400..800&display=swap"
+    />
+    <title>StockPilot AI</title>
+  </head>
+  <body data-theme="dark">
+    <script>
+      /* Apply the saved theme before first paint (localStorage key `sp-theme2`; default dark). */
+      (function () {
+        var t = 'dark';
+        try {
+          t = localStorage.getItem('sp-theme2') || 'dark';
+        } catch (e) {}
+        document.body.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

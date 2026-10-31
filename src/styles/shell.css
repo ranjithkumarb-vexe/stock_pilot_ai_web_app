@@ -1,0 +1,302 @@
+/* App shell. Desktop values are copied from the design's inline styles (sidebar 236px, header min-height 66px,
+   main padding 28/32/20, max-width 1320). The design has no breakpoints; below 900px the sidebar becomes a drawer. */
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+.shell__sidebar {
+  width: 236px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.shell__col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.shell__main {
+  flex: 1;
+  padding: 28px 32px 20px;
+  max-width: 1320px;
+  width: 100%;
+  display: grid;
+  gap: 24px;
+  align-content: start;
+  outline: none;
+}
+.shell__footer {
+  padding: 14px 32px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+  display: grid;
+  gap: 6px;
+  line-height: 1.55;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  min-height: 66px;
+  padding: 6px 24px;
+  background: color-mix(in oklch, var(--bg) 72%, transparent);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar__shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  box-shadow: 0 10px 30px oklch(0 0 0 / 0.18);
+}
+.topbar__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-stretch: 115%;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  flex: 1 0 auto;
+  white-space: nowrap;
+}
+.topbar__hud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 12px var(--mono);
+}
+.topbar__palette {
+  flex: 1 1 220px;
+  max-width: 440px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-3);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+.topbar__palette kbd {
+  font: 500 11px var(--mono);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--ink-2);
+}
+.topbar__chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+button.topbar__chip {
+  cursor: pointer;
+}
+.topbar__chip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.topbar__menu {
+  display: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.nav-item:hover {
+  color: var(--ink);
+}
+.nav-item[aria-current='page'] {
+  color: var(--ink);
+}
+
+.menu-pop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+}
+.menu-pop button,
+.menu-pop a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.menu-pop button:hover,
+.menu-pop a:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.palette {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12vh 20px 20px;
+  background: oklch(0.1 0.02 250 / 0.55);
+  backdrop-filter: blur(6px);
+}
+.palette__panel {
+  width: 640px;
+  max-width: 100%;
+  border-radius: 22px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.palette__item {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+}
+.palette__item[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+
+.mobile-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  background: oklch(0.1 0.02 250 / 0.5);
+}
+.mobile-nav__panel {
+  width: min(300px, 86vw);
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+@media (max-width: 899px) {
+  .shell__sidebar {
+    display: none;
+  }
+  .topbar__menu {
+    display: grid;
+  }
+  .topbar {
+    padding: 8px 16px;
+    gap: 8px 10px;
+  }
+  .topbar__title {
+    font-size: 18px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar__palette {
+    order: 5;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .topbar__hud {
+    order: 4;
+  }
+  .shell__main {
+    padding: 20px 16px 16px;
+    gap: 20px;
+  }
+  .shell__footer {
+    padding: 14px 16px 18px;
+  }
+}
+@media (max-width: 480px) {
+  .topbar__palette kbd {
+    display: none;
+  }
+  .topbar__hud {
+    flex: 1 1 100%;
+  }
+}

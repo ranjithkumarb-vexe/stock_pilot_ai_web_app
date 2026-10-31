@@ -1,0 +1,307 @@
+/* Primitive styles. Values mirror the inline styles in design/StockPilot AI.dc.html and the Design System page. */
+.sp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.sp-btn:disabled,
+.sp-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sp-btn--sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.sp-btn--lg {
+  height: 42px;
+  font-size: 14px;
+}
+.sp-btn--block {
+  display: flex;
+  width: 100%;
+}
+.sp-btn--primary {
+  border: 0;
+  background: var(--grad);
+  color: var(--accent-ink);
+}
+.sp-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.sp-btn--secondary {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.sp-btn--secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.sp-btn--destructive {
+  border: 1px solid var(--loss-line);
+  background: var(--loss-soft);
+  color: var(--loss);
+}
+.sp-btn--destructive:hover:not(:disabled) {
+  border-color: var(--loss);
+}
+.sp-btn--link {
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  text-decoration: underline;
+}
+.sp-btn--link:hover:not(:disabled) {
+  color: var(--accent-hover);
+}
+.sp-btn--ghost {
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+}
+.sp-btn--ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.sp-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--ink);
+}
+.sp-iconbtn:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.sp-pill {
+  display: inline-block;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font:
+    600 11px/22px 'Geist',
+    system-ui,
+    sans-serif;
+}
+.sp-tone-ok {
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+.sp-tone-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.sp-tone-bad {
+  background: var(--loss-soft);
+  color: var(--loss);
+}
+.sp-tone-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.sp-tone-n {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.sp-tone-acc {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.sp-chip {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font:
+    600 12px/28px 'Geist',
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--ink-2);
+  border: 1px solid var(--line-strong);
+}
+.sp-chip[aria-pressed='true'] {
+  background: var(--grad);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent);
+}
+
+.sp-badge {
+  display: inline-block;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--loss);
+  color: oklch(0.14 0.04 275);
+  font: 600 11px/20px var(--mono);
+  text-align: center;
+}
+
+.sp-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+}
+.sp-card--accent {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.sp-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border-radius: 9px;
+  justify-self: start;
+}
+.sp-seg button {
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-3);
+}
+.sp-seg button[aria-checked='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+.sp-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: oklch(0.1 0.02 250 / 0.55);
+  padding: 24px;
+}
+.sp-overlay--drawer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+  background: oklch(0.1 0.02 250 / 0.5);
+}
+.sp-dialog {
+  max-width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+  display: grid;
+  gap: 14px;
+}
+.sp-dialog h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 26px;
+  margin: 0;
+}
+.sp-drawer {
+  width: 440px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--bg);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  overflow-y: auto;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.sp-toast {
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: max-content;
+  bottom: 28px;
+  z-index: 90;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+  max-width: 80vw;
+}
+
+.sp-skel {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-2) 20%, var(--line) 50%, var(--surface-2) 80%);
+  background-size: 200% 100%;
+  animation: sp-shimmer 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-skel {
+    animation: none;
+  }
+}
+
+.sp-eyebrow {
+  font: 600 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.sp-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.sp-input {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  padding: 0 12px;
+  font-size: 14px;
+}
+.sp-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+  display: grid;
+  gap: 6px;
+}
+.sp-error-card {
+  background: var(--loss-soft);
+  border-radius: 14px;
+  padding: 20px;
+  display: grid;
+  gap: 6px;
+}

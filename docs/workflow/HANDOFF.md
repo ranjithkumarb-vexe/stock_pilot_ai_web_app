@@ -1,0 +1,48 @@
+# Handoff notes (newest first)
+
+## Open change requests
+Template: `CR-<n> | from | to | what/why | blocking task ids | status`
+- CR-FE-1 | frontend (FE-02) | architect/backend | CONTRACT.md leaves these shapes open and the FE guessed them (types in `src/api/types.ts` marked UNVERIFIED): `GET /v1/market/status` (assumed `{open, session, feed?: live|delayed|stale|reconnecting, as_of?}`), SSE `quote|alert|proposal|heartbeat` payloads (assumed Quote / Alert / Proposal / `{ts}`), `GET /v1/chat/history`, list wrappers for `/orders`, `/audit/traces`. Please pin them in CONTRACT.md + OpenAPI. The shell's market/feed chips and stale/reconnect banners depend on `market/status.feed`. | FE-05, FE-08, FE-09 | open
+- CR-FE-2 | frontend | backend | SSE resume: the stream token lives 60 s and is single-use, so every reconnect creates a new `EventSource`, which cannot send `Last-Event-ID`. FE sends `GET /v1/stream?token=…&last_event_id=<id>`; backend should accept that query param as a fallback for the header. | FE-05, FE-08 | open
+- CR-FE-3 | frontend | backend | `navigator.sendBeacon` cannot set `Authorization`, so the unload flush of telemetry uses `fetch(..., {keepalive:true})` with the bearer instead. If a beacon is preferred, backend needs a beacon-friendly auth for `POST /v1/events` (e.g. token in body). | none | open
+- CR-FE-4 | frontend | backend | OpenAPI currently lacks `/v1/stream` (SSE) and every domain endpoint except auth/me/account/stream-token; FE types for them are hand-written from CONTRACT.md. When each module lands, regenerate `contracts/openapi.json` so `npm run gen:api` + `check_contract.sh` can cover it. | FE-04..10 | open
+- CR-FE-5 | frontend | orchestrator | `react-router` 6.x has two moderate advisories (open redirect via backslash GHSA-wrjc-x8rr-h8h6; SSR deserializeErrors, not used). Fix is v7 (breaking). We only navigate to stored internal paths and sanitise them (`safeInternalPath`). Decide whether to upgrade (ADR-001 says v6). | none | open
+
+## 2026-11-01 — frontend-engineer (FE-01, FE-02, FE-03)
+**Status:** FE-01/02/03 done; evidence in VERIFICATION.md. `npm run lint && typecheck && test && build` green (102 tests). Verified against the live backend (`make run`, dev-login priya, `/me`, stream token, real 401). Nothing committed.
+
+**What exists**
+- Tooling: Vite 8, React 18.3, TS 5.9 strict (`noUncheckedIndexedAccess`), ESLint 9 (+jsx-a11y, react-hooks), Prettier, Vitest 4 + jsdom + jest-axe, Playwright config (`e2e/`, browsers not installed). `@/` alias = `src/`. `lightweight-charts@4.2.0`, `motion@11`, `@supabase/supabase-js` are already installed so feature agents must NOT touch `package.json` deps for those.
+- Tokens: `src/styles/tokens.css` is a byte-for-byte port of the design variables and is guarded by `tokens.test.ts` (excluded from Prettier; do not reformat or edit).
+- Motion: `src/motion` mirrors `sp-motion.js`. Preferred in new code: `<Enter kind="pop|rise|fade|scr-f|…" delay={ms} duration={s}>` (use `as="g"|"path"` in SVG), `<Stagger>` (children rise 0.05 s apart), `<Loop kind="pulse|blink|shimmer|breathe|orbit|ping…">`, `useEnter/useStagger/useLoop/useSpringStyle(ref,…)`, `<AiGlyph size>`. Delegated hover (1.02) / tap (0.97) springs apply to every `<button>` automatically (opt out with `data-nm`). Copying design markup verbatim also works: `data-m`, `data-md`, `data-mdur`, `data-len`, `data-stagger`, `data-sp`, `data-loop`, `data-ld`, `data-ai` are handled by the DOM observer in `MotionRoot`. Everything honours `prefers-reduced-motion`.
+- UI primitives (`@/ui`): Button/IconButton (primary|secondary|destructive|link|ghost), Pill (`tone` ok|warn|bad|info|n|acc = the design `CS` styles; `toneStyle` for style objects), Chip (aria-pressed), Badge, Card, SegmentedControl, Modal/Drawer (portal, focus trap, Esc, backdrop), `useToast().say(msg)` / `.stamp({word,line,tone})`, Skeleton/SkeletonBlock, Meter, Sparkline, LogoMark/Wordmark, Icon (nav paths from the design), `useFocusTrap`. Classes live in `src/ui/ui.css`.
+
+**How to add / use API hooks (FE-02)**
+- Call `api.get/post/put/patch/del` from `@/api` (never `fetch`). Paths are `${V1}/…`. Hooks per resource are in `src/api/hooks/<resource>.ts` with stable keys in `src/api/keys.ts` (`qk`). To add one: `useQuery({queryKey: qk.x, queryFn: ({signal}) => api.get<T>(`${V1}/x`, {signal})})`; mutations invalidate by prefix (see `useDecideProposal`). Put new response types in `src/api/types.ts` (or derive from `schema.d.ts` once the backend publishes the endpoint, then run `npm run gen:api`).
+- Errors are `ApiError {code,message,trace_id,details,status,retryAfterMs}`; render with `describeError(e)` (title/message/retryable/fieldErrors/violations/traceId) or `<ErrorPanel error={e} onRetry>` from `@/shell/ErrorBoundary`. All copy is in `src/api/errors.ts`. 401 clears the session automatically (the app redirects to /signin and shows the "Session expired" dialog); 429 on GET auto-retries (≤2, ≤10 s) and exposes `retryAfterMs` otherwise.
+- Orders: generate ONE `newIdempotencyKey()` per ticket and pass it as `useCreateOrder().mutate({body, idempotencyKey})`; re-use it on double clicks/retries.
+- Live data: `useStream()` gives `{state: connected|reconnecting|offline, reconnect, subscribe(fn)}`; `useLiveQuote(symbol)` returns the latest SSE quote (prefer it over polled quotes). alert/proposal events already invalidate the alerts/proposals/feed caches.
+- Telemetry: `const track = useTrack(); track({type:'ticker_viewed', entity:{ticker}})`; `const ref = useDwell('risk', {entity:{ticker}})` on a section emits `section_dwell`. Batches go to `POST /v1/events` every 5 s (≤100).
+- Auth: `useAuth()` → `{mode, status, user, signInDev(persona), signInWithGoogle(), verifyMfa(code), signOut(), expireSession()}`; status `mfa_required` is for FE-04's TOTP step (the sign-in placeholder shows a stub). Dev persona labels are in `src/auth/personas.ts`.
+- Degraded banners: call `reportLlmDegraded(true|false)` / `reportEdgarDelayed(true|false)` from `@/shell/systemStatus` when a brief/chat comes back degraded or EDGAR is rate limited; the shell shows MODEL UNAVAILABLE / FILINGS DELAYED on the right screens.
+
+**Porting a screen from the design**
+1. Replace the body of `src/features/<screen>/index.tsx`; keep `export default function Screen()`. The shell already provides header/title, banners, transition, footer; do not render your own `<main>` or page `<h1>` (the top bar owns the h1; use `<h2>` for screen sections). Route params via `useParams` (`/brief/:symbol?`, `/proposals/:id?`). Tell the shell which ticker the brief nav item should open with `useLastTicker()[1](symbol)`.
+2. Copy the markup/inline styles from the design template (line ranges: dashboard 176–235, watchlist 236–261, brief 262–297, portfolio 298–324, proposals 325–353, trading 354–377, live 378–404, alerts 405–415, ask 416–433, profile 434–483, audit 484–504) and swap `{{ }}` for typed props from API hooks. Numbers must come from the API only.
+3. Disclaimer text: `import { DISCLAIMER_TEXT } from '@/shell/disclaimer'` (checked against SPEC Appendix A by a test). Ask Pilot hand-off from the palette arrives as `useLocation().state.ask`.
+4. Add Vitest tests next to the component; use `renderApp(path)` + `installFetch(handler)` from `src/test/renderApp.tsx` to render inside the full provider/router stack with a fake API (jsdom has no EventSource; the stream just reports reconnecting).
+
+**Test ids (stable, E2E relies on them):** `skip-link`, `app-shell`, `topbar`, `page-title`, `primary-nav`, `nav-<dashboard|watchlist|brief|portfolio|proposals|trading|live|alerts|ask|profile|audit>`, `nav-badge-<id>`, `nav-toggle` (mobile), `mobile-nav`, `nav-close`, `user-menu`, `user-menu-popover`, `switch-<priya|alex|new>`, `sign-out`, `theme-toggle`, `market-chip`, `feed-chip`, `hud`, `palette-trigger`, `palette`, `palette-input`, `palette-list`, `palette-item-<n>`, `banners`, `banner-<offline|unreachable|stale|feed|llm|edgar|closed>`, `disclaimer-footer`, `disclaimer-text`, `toast`, `stamp`, `session-expired`, `session-expired-signin`, `not-found`, `screen-<id>`, `screen-transition` (+`data-dir`), `signin-<priya|alex|new>`, `signin-google`, `signin-error`, `pilot-card`.
+
+**Gotchas**
+- Node 25 + Vitest prints a harmless `--localstorage-file` warning; `src/test/setup.ts` installs an in-memory Storage because Node 25's experimental global `localStorage` shadows jsdom's.
+- TanStack Query pauses queries while `navigator.onLine` is false (onlineManager singleton): tests that simulate offline must dispatch `online` afterwards.
+- Switching the dev persona resets the whole query cache (AuthProvider); do not cache per-user data outside TanStack Query.
+- The shell's market/feed chips and stale/reconnect banners are driven by `GET /v1/market/status` (+SSE state). Until the backend serves it the chips show "US market status / Connecting" and nothing breaks (verified live: unbuilt endpoints 404 and the shell keeps working). In dev auth mode the chips become controls (`POST /v1/dev/market`, `/v1/dev/feed`).
+- Signed-out → sign-in remembers the target in router state (`from`) and sanitises it (`safeInternalPath`). 30 min of inactivity expires the session (design behaviour).
+- Mobile (<900 px) has no design counterpart: sidebar becomes a focus-trapped drawer, top bar wraps. Breakpoint constant `MOBILE_QUERY` in `src/shell/hooks.ts` must match `shell.css`.
+- `npm run e2e` needs `npx playwright install chromium` first; `e2e/support/mockApi.ts` is test-only.
+
+## 2026-10-31 — orchestrator
+Initial scaffolding: agents, workflow, task board, contract. Branch `develop`; owner raises PR to `main`.
+Next: Wave 1 (BE-01..03 ‖ FE-01..03), then BE-04 seed.
