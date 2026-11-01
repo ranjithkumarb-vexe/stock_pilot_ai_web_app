@@ -1,0 +1,124 @@
+.pf-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.pf-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+}
+.pf-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+.pf-main > :first-child {
+  flex: 2 1 640px;
+  min-width: 0;
+}
+.pf-main > :last-child {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+.pf-table-wrap {
+  overflow-x: auto;
+}
+.pf-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.pf-table th {
+  padding: 10px 10px;
+  font: 600 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.pf-table th.num,
+.pf-table td.num {
+  text-align: right;
+}
+.pf-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.pf-table th:first-child,
+.pf-table td:first-child {
+  padding-left: 16px;
+}
+.pf-table th:last-child,
+.pf-table td:last-child {
+  padding-right: 16px;
+}
+.pf-table tbody tr {
+  cursor: pointer;
+}
+.pf-table tbody tr:hover,
+.pf-table tbody tr:focus-within {
+  background: var(--surface-2);
+}
+.pf-mono {
+  font-family: var(--mono);
+}
+.pf-tick {
+  font: 600 13px var(--mono);
+  color: var(--ink);
+  text-decoration: none;
+}
+.pf-tick:hover {
+  text-decoration: underline;
+}
+.pf-bar {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  min-width: 60px;
+}
+.pf-bar > .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+.pf-bar > .cap {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  left: 62.5%;
+  background: var(--ink);
+}
+.pf-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.pf-step:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.pf-step:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pf-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}

@@ -1,0 +1,65 @@
+.live-trade {
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--bg);
+  font:
+    700 13px 'Geist',
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+  display: grid;
+  align-content: center;
+  line-height: 1.25;
+}
+.live-trade span {
+  font: 500 11px var(--mono);
+}
+.live-trade--buy {
+  background: var(--gain);
+}
+.live-trade--sell {
+  background: var(--loss);
+}
+.live-trade:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.live-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+}
+.live-main {
+  flex: 1 1 560px;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+.live-side {
+  flex: 0 1 250px;
+  min-width: 230px;
+  display: grid;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .live-side {
+    flex: 1 1 100%;
+  }
+}
+.live-chart-box {
+  position: relative;
+  height: 420px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+}
+@media (max-width: 640px) {
+  .live-chart-box {
+    height: 320px;
+  }
+}

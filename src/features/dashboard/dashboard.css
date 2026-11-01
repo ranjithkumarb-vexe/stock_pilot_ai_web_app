@@ -1,0 +1,58 @@
+.hv-ring:hover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.dash-link {
+  border: 0;
+  background: transparent;
+  padding: 0 6px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.dash-feedcard {
+  transition: border-color 0.15s;
+}
+.dash-feedcard:hover {
+  border-color: var(--line-strong) !important;
+}
+.dash-why {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0.28s;
+}
+.dash-why[data-open='true'] {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-why,
+  .dash-why[data-open='true'] {
+    transition: none;
+  }
+}
+.dash-mover {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 8px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.dash-mover:hover {
+  background: var(--surface-2);
+}

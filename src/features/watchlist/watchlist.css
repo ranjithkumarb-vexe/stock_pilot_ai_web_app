@@ -1,0 +1,146 @@
+.wl-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  overflow-x: auto;
+}
+.wl-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.wl-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font: 600 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.wl-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.wl-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.wl-num {
+  text-align: right !important;
+  font-family: var(--mono);
+}
+.wl-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.wl-remove {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  cursor: pointer;
+}
+.wl-remove:hover {
+  color: var(--loss);
+}
+.wl-remove:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+/* Below 760px each row becomes a card (the design is desktop-only; this keeps 360px usable without sideways scroll). */
+@media (max-width: 759px) {
+  .wl-wrap {
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .wl-table,
+  .wl-table tbody {
+    display: block;
+    min-width: 0;
+  }
+  .wl-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .wl-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'co px'
+      'sec day'
+      'fresh trend'
+      'held int'
+      'act act';
+    gap: 6px 12px;
+    align-items: center;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .wl-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .wl-table td.wl-num {
+    text-align: right !important;
+  }
+  .wl-row .c-co {
+    grid-area: co;
+  }
+  .wl-row .c-sec {
+    grid-area: sec;
+  }
+  .wl-row .c-px {
+    grid-area: px;
+  }
+  .wl-row .c-day {
+    grid-area: day;
+  }
+  .wl-row .c-trend {
+    grid-area: trend;
+    justify-self: end;
+  }
+  .wl-row .c-fresh {
+    grid-area: fresh;
+  }
+  .wl-row .c-held {
+    grid-area: held;
+  }
+  .wl-row .c-int {
+    grid-area: int;
+  }
+  .wl-row .c-act {
+    grid-area: act;
+    padding-top: 4px;
+  }
+  .wl-row .c-held::before,
+  .wl-row .c-int::before {
+    content: attr(data-label) ': ';
+    font:
+      400 12px 'Geist',
+      system-ui,
+      sans-serif;
+    color: var(--ink-3);
+  }
+  .wl-actions {
+    justify-content: flex-start;
+  }
+}
