@@ -37,6 +37,7 @@
   box-shadow: var(--card-shadow);
   padding: 24px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 .pp-tiles {

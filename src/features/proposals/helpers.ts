@@ -66,9 +66,13 @@ export function decidedText(p: Proposal): string {
           )
         : 'Marked as reviewed.';
     case 'modified':
-      return 'Modified and approved. Executed in the paper simulator.';
-    case 'rejected':
-      return 'Rejected. Proposal-type items now rank lower for you.';
+      return p.modified_qty != null
+        ? `Modified to ${p.modified_qty} shares and approved. Executed in the paper simulator.`
+        : 'Modified and approved. Executed in the paper simulator.';
+    case 'rejected': {
+      const why = REJECT_REASONS.find(r => r.value === p.reject_reason)?.label;
+      return `Rejected${why ? ` (${why.toLowerCase()})` : ''}. Proposal-type items now rank lower for you.`;
+    }
     case 'reviewed':
       return 'Marked as reviewed.';
     case 'expired':
@@ -111,11 +115,13 @@ const num = (o: Record<string, unknown> | null | undefined, keys: string[]): num
   }
   return null;
 };
-/** UNVERIFIED field names: the preview `fill` object is not pinned by CONTRACT.md. */
-export const fillPrice = (fill: Record<string, unknown> | null | undefined): number | null =>
-  num(fill, ['price', 'fill_price', 'avg_price', 'est_price']);
-export const fillNotional = (fill: Record<string, unknown> | null | undefined): number | null =>
-  num(fill, ['notional', 'proceeds', 'value', 'est_proceeds', 'amount']);
+/** The preview estimate lives on `order` (`est_price`, `est_cost`); `fill` is null on a preview. */
+type PreviewLike = { order?: object | null; fill?: object | null } | null | undefined;
+export const fillPrice = (pv: PreviewLike): number | null =>
+  num(pv?.order as Record<string, unknown> | null, ['est_price']) ??
+  num(pv?.fill as Record<string, unknown> | null, ['price']);
+export const fillNotional = (pv: PreviewLike): number | null =>
+  num(pv?.order as Record<string, unknown> | null, ['est_cost']);
 
 /** "Expires in 22 h" for an open proposal. */
 export function expiresLabel(p: Proposal, now: number = Date.now()): string {

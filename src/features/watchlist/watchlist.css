@@ -4,6 +4,7 @@
   border-radius: 14px;
   box-shadow: var(--card-shadow);
   overflow-x: auto;
+  position: relative; /* clips the absolutely positioned .sr-only header text that would otherwise widen the page */
 }
 .wl-table {
   width: 100%;

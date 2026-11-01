@@ -33,6 +33,7 @@ const FILTERS: Array<{ key: FilterKey; label: string }> = [
 ];
 
 const TELEMETRY = { open: 'alert_opened', dismiss: 'alert_dismissed', snooze: 'alert_snoozed' } as const;
+/** `restore` has no telemetry event: it undoes a dismissal/snooze server-side. */
 
 /** FE-09 · Alerts: filters, Open / Snooze 24h / Dismiss (persisted through the API), materiality and sources. */
 export default function Screen() {
@@ -54,10 +55,16 @@ export default function Screen() {
 
   const dismissed = all.filter(a => a.state === 'dismissed').length;
   const read = all.filter(isRead).length;
-  const fatigue = dismissed + read ? (dismissed / (dismissed + read)).toFixed(2) : '0.00';
   const firstPage = q.data?.pages[0];
-  const threshold = firstPage?.move_threshold ?? firstPage?.meta?.move_threshold ?? null;
-  const stale = market.data?.open && market.data?.feed === 'stale';
+  // the server owns both figures (GET /alerts: fatigue_index, move_threshold); fall back to counting what is loaded
+  const fatigue =
+    firstPage?.fatigue_index != null
+      ? firstPage.fatigue_index.toFixed(2)
+      : dismissed + read
+        ? (dismissed / (dismissed + read)).toFixed(2)
+        : '0.00';
+  const threshold = firstPage?.move_threshold ?? null;
+  const stale = market.data?.open && market.data?.feed_state === 'stale';
 
   const run = (a: Alert, action: AlertAction, after?: () => void, okMsg?: string) => {
     setBusyId(a.id);
@@ -65,11 +72,12 @@ export default function Screen() {
       { id: a.id, action },
       {
         onSuccess: () => {
-          track({
-            type: TELEMETRY[action],
-            entity: { alert_id: a.id, ticker: a.symbol ?? undefined },
-            props: { action },
-          });
+          if (action !== 'restore')
+            track({
+              type: TELEMETRY[action],
+              entity: { alert_id: a.id, ticker: a.symbol ?? undefined },
+              props: { action },
+            });
           if (okMsg) toast.say(okMsg);
         },
         onError: e => toast.say(describeError(e).message),
@@ -134,6 +142,7 @@ export default function Screen() {
               onOpen={x => run(x, 'open', () => navigate(destinationFor(x)))}
               onSnooze={x => run(x, 'snooze', undefined, 'Snoozed for 24 hours')}
               onDismiss={x => run(x, 'dismiss', undefined, `Dismissed. ${label(x)} alerts rank lower.`)}
+              onRestore={x => run(x, 'restore', undefined, 'Restored to your alerts')}
             />
           ))}
           {list.length === 0 && (

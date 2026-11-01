@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, V1 } from '../client';
 import { qk } from '../keys';
-import type { Order, OrderRequest, OrderResponse, Paged } from '../types';
+import type { Order, OrderPreview, OrderRequest, OrderResponse, Paged } from '../types';
 
 export const useOrders = () =>
   useQuery({
@@ -13,7 +13,7 @@ export const useOrders = () =>
 export const usePreviewOrder = () =>
   useMutation({
     mutationKey: ['orders', 'preview'],
-    mutationFn: (body: OrderRequest) => api.post<OrderResponse>(`${V1}/orders/preview`, body),
+    mutationFn: (body: OrderRequest) => api.post<OrderPreview>(`${V1}/orders/preview`, body),
   });
 
 /**

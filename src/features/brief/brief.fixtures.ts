@@ -29,7 +29,13 @@ export const brief = (over: Partial<Brief> = {}): Brief => ({
   status: 'ok',
   stale: false,
   stale_reason: null,
-  style_card: { depth: 'standard', pinned_metric: 'Dividend yield' },
+  style_card: {
+    depth: 'standard',
+    jargon: 1,
+    tone: 'Plain language',
+    order: ['bal', 'risk', 'trend', 'bb'],
+    metric: 'Dividend yield',
+  },
   section_order: ['bal', 'risk', 'trend', 'bb'],
   sections: [
     {

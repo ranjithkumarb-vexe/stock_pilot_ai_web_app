@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { __resetSession } from '@/auth/session';
 import { installFetch, renderApp, type MockRoute } from '@/test/renderApp';
+import type { Proposal } from '@/api/types';
+import { decidedText } from './helpers';
 
 const HOUR = 3600_000;
 const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
@@ -57,8 +59,8 @@ const EXP = proposal({
 });
 
 const previewOk = {
-  order: null,
-  fill: { price: 152.32, notional: 1218.56 },
+  order: { est_price: 152.32, est_cost: 1218.56, est_cash_after: 1000, will: 'queue' },
+  fill: null,
   checks: [
     { key: 'cap', ok: true, severity: 'pass', label: 'Position cap', detail: 'Stays under 10%' },
     { key: 'cash', ok: true, severity: 'note', label: 'Cash buffer', detail: 'Cash rises to 23%' },
@@ -417,5 +419,15 @@ describe('proposals (FE-07)', () => {
     expect(
       await axe(document.body, { rules: { 'color-contrast': { enabled: false } } }),
     ).toHaveNoViolations();
+  });
+});
+
+describe('decided proposals read back what the API stored (CR-FE-6 h)', () => {
+  it('shows the stored reject reason and the modified quantity', () => {
+    const p = proposal({ status: 'rejected', reject_reason: 'too_risky' }) as unknown as Proposal;
+    expect(decidedText(p)).toContain('Rejected (too risky)');
+    const m = proposal({ status: 'modified', modified_qty: 90 }) as unknown as Proposal;
+    expect(decidedText(m)).toContain('Modified to 90 shares');
+    expect(decidedText(proposal({ status: 'rejected' }) as unknown as Proposal)).toMatch(/^Rejected\. /);
   });
 });

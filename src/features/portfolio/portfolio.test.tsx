@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { __resetSession } from '@/auth/session';
 import { installFetch, renderApp, type MockRoute } from '@/test/renderApp';
+import { rebase100 } from './EquityCurve';
 
 const pos = (symbol: string, weight: number, over: Record<string, unknown> = {}) => ({
   symbol,
@@ -58,9 +59,9 @@ const risk = (over: Record<string, unknown> = {}) => ({
 
 const perf = {
   series: [
-    { ts: '2026-10-01T00:00:00Z', equity: 100000, spy_norm: 100 },
-    { ts: '2026-10-15T00:00:00Z', equity: 102000, spy_norm: 101 },
-    { ts: '2026-10-30T00:00:00Z', equity: 104000, spy_norm: 100.5 },
+    { ts: '2026-10-01T00:00:00Z', equity: 100000, spy_norm: 100000 },
+    { ts: '2026-10-15T00:00:00Z', equity: 102000, spy_norm: 101000 },
+    { ts: '2026-10-30T00:00:00Z', equity: 104000, spy_norm: 100500 },
   ],
   stats: {
     ytd_pct: 4,
@@ -147,6 +148,12 @@ describe('portfolio and risk (FE-07)', () => {
     );
     expect(curve).toHaveTextContent('Portfolio +4.0% YTD');
     expect(curve).toHaveTextContent('S&P 500 +0.5% YTD');
+  });
+
+  it('rebases BOTH series to 100 (the API indexes equity and spy_norm to the starting equity, not 100)', () => {
+    expect(rebase100([100000, 102000, 104000])).toEqual([100, 102, 104]);
+    expect(rebase100([93850.43, 94000, 0, 95000])[0]).toBe(100);
+    expect(rebase100([])).toEqual([]);
   });
 
   it('says so when there is no equity history yet', async () => {

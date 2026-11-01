@@ -45,7 +45,7 @@ export async function installMockApi(page: Page, opts: MockOptions = {}): Promis
     if (p === '/auth/dev-login') return json({ access_token: 'mock-token', expires_in: 3600, user });
     if (p === '/me') return json({ ...user, onboarded });
     if (p === '/market/status')
-      return json({ open: marketOpen, session: marketOpen ? 'regular' : 'closed', feed });
+      return json({ open: marketOpen, session: marketOpen ? 'regular' : 'closed', feed_state: feed });
     if (p === '/portfolio')
       return json({
         portfolio_id: 'p1',

@@ -169,7 +169,11 @@ export default function Screen() {
   const violations = r?.violations ?? [];
 
   return (
-    <Enter kind="fade" data-testid="screen-portfolio" style={{ display: 'grid', gap: 20 }}>
+    <Enter
+      kind="fade"
+      data-testid="screen-portfolio"
+      style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 20 }}
+    >
       {violations.length > 0 && (
         <div
           role="alert"
@@ -245,7 +249,7 @@ export default function Screen() {
                 Positions
               </h2>
             </div>
-            <div className="pf-table-wrap">
+            <div className="pf-table-wrap" tabIndex={0} role="region" aria-label="Positions (scrollable)">
               <table className="pf-table" data-testid="pf-positions">
                 <thead>
                   <tr>

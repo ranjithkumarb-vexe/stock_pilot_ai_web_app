@@ -1,13 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { api, V1 } from '@/api/client';
 import { qk } from '@/api/keys';
-import type { Alert, Paged } from '@/api/types';
+import type { Alert, AlertsPage } from '@/api/types';
 
-/** Optional list-level fields the contract does not pin yet (UNVERIFIED): the backend-owned unusual-move threshold. */
-export type AlertsPage = Paged<Alert> & {
-  move_threshold?: number | null;
-  meta?: { move_threshold?: number | null };
-};
+export type { AlertsPage };
 
 /** All alerts, newest first. Filtering and the "Archived" split happen client-side so the tab counts are exact. */
 export const useAllAlerts = () =>
@@ -22,8 +18,8 @@ export const useAllAlerts = () =>
 
 export const ARCHIVED = new Set(['dismissed', 'snoozed']);
 export const isArchived = (a: Alert): boolean => ARCHIVED.has(String(a.state));
-/** API enum is `opened`; CONTRACT.md says `read`. Treat both as read. */
-export const isRead = (a: Alert): boolean => a.state === 'read' || a.state === 'opened';
+/** API state enum: `new | opened | dismissed | snoozed`. */
+export const isRead = (a: Alert): boolean => a.state === 'opened';
 
 export const TYPE_META: Record<string, { label: string; tone: 'bad' | 'info' | 'warn' | 'n' }> = {
   breach: { label: 'Rule breach', tone: 'bad' },
@@ -36,7 +32,6 @@ export const TYPE_META: Record<string, { label: string; tone: 'bad' | 'info' | '
 
 export const STATE_LABEL: Record<string, string> = {
   new: 'New',
-  read: 'Read',
   opened: 'Read',
   snoozed: 'Snoozed',
   dismissed: 'Dismissed',

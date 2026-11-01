@@ -132,6 +132,18 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     retryable: true,
     tone: 'warn',
   },
+  method_not_allowed: {
+    title: 'Not supported',
+    message: 'This action is not supported here. Refresh the page and try again.',
+    retryable: false,
+    tone: 'warn',
+  },
+  payload_too_large: {
+    title: 'Too much data',
+    message: 'What you sent is larger than the server accepts. Shorten it and try again.',
+    retryable: false,
+    tone: 'warn',
+  },
   internal: {
     title: 'Something went wrong',
     message:

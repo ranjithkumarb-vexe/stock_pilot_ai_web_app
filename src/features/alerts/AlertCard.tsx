@@ -10,10 +10,11 @@ type Props = {
   onOpen: (a: Alert) => void;
   onSnooze: (a: Alert) => void;
   onDismiss: (a: Alert) => void;
+  onRestore: (a: Alert) => void;
 };
 
 /** Everything below is rendered as React text nodes: alert title/body/source come from fetched content and are never HTML. */
-export function AlertCard({ alert: a, busy, onOpen, onSnooze, onDismiss }: Props) {
+export function AlertCard({ alert: a, busy, onOpen, onSnooze, onDismiss, onRestore }: Props) {
   const id = useId();
   const meta = TYPE_META[a.type] ?? { label: String(a.type), tone: 'n' as const };
   const archived = isArchived(a);
@@ -139,6 +140,17 @@ export function AlertCard({ alert: a, busy, onOpen, onSnooze, onDismiss }: Props
               Dismiss
             </button>
           </>
+        )}
+        {archived && !a.critical && (
+          <button
+            type="button"
+            className="s3-btn-sm"
+            disabled={busy}
+            onClick={() => onRestore(a)}
+            data-testid={`alert-restore-${a.id}`}
+          >
+            Restore
+          </button>
         )}
       </div>
     </article>

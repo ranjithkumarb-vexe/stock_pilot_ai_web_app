@@ -25,6 +25,7 @@
 }
 .pf-table-wrap {
   overflow-x: auto;
+  position: relative; /* clips the absolutely positioned .sr-only header text that would otherwise widen the page */
 }
 .pf-table {
   width: 100%;
@@ -119,6 +120,10 @@
 }
 .pf-rules {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  /* 190px keeps the longest status pill ("Breached: 26.6%") inside its card on a 390 px phone */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   gap: 12px;
+}
+.pf-rules > * {
+  min-width: 0;
 }

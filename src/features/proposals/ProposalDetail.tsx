@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDecideProposal, usePortfolio, usePreviewOrder } from '@/api';
 import { describeError } from '@/api/errors';
-import type { Order, OrderResponse, Proposal, RejectReason } from '@/api/types';
+import type { Order, OrderPreview, Proposal, RejectReason } from '@/api/types';
 import { money0, money2 } from '@/features/portfolio/format';
 import { DISCLAIMER_TEXT } from '@/shell/disclaimer';
 import { useTrack } from '@/telemetry';
@@ -81,11 +81,11 @@ export function ProposalDetail({ proposal: p, onDecided }: { proposal: Proposal;
     previewMutate({ symbol, side, type: 'market', qty: suggested, proposal_id: pid });
   }, [actionable, symbol, side, suggested, pid, previewMutate]);
 
-  const pv: OrderResponse | undefined = preview.data;
+  const pv: OrderPreview | undefined = preview.data;
   const checks: CheckRow[] = pv ? fromOrderChecks(pv.checks) : fromRulesChecked(p.rules_checked);
   const blocked = !!pv?.blocked || checks.some(c => c.mark === 'Blocked');
-  const px = fillPrice(pv?.fill);
-  const proceeds = fillNotional(pv?.fill);
+  const px = fillPrice(pv);
+  const proceeds = fillNotional(pv);
 
   const submit = (body: {
     decision: 'approve' | 'reject' | 'modify';
@@ -204,25 +204,27 @@ export function ProposalDetail({ proposal: p, onDecided }: { proposal: Proposal;
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 8 }} data-testid="proposal-weights">
-            <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {p.rule === 'sec' ? 'Sector' : (p.symbol ?? 'Position')} weight against your {p.cap_pct}% rule
+          {p.cap_pct != null && p.current_weight_pct != null && p.after_weight_pct != null && (
+            <div style={{ display: 'grid', gap: 8 }} data-testid="proposal-weights">
+              <div style={{ fontSize: 13, fontWeight: 600 }}>
+                {p.rule === 'sec' ? 'Sector' : (p.symbol ?? 'Position')} weight against your {p.cap_pct}% rule
+              </div>
+              <Meter
+                label="Now"
+                value={p.current_weight_pct}
+                cap={p.cap_pct}
+                display={`${p.current_weight_pct.toFixed(1)}%`}
+                labelWidth={70}
+              />
+              <Meter
+                label="After"
+                value={p.after_weight_pct}
+                cap={p.cap_pct}
+                display={`${p.after_weight_pct.toFixed(1)}%`}
+                labelWidth={70}
+              />
             </div>
-            <Meter
-              label="Now"
-              value={p.current_weight_pct}
-              cap={p.cap_pct}
-              display={`${p.current_weight_pct.toFixed(1)}%`}
-              labelWidth={70}
-            />
-            <Meter
-              label="After"
-              value={p.after_weight_pct}
-              cap={p.cap_pct}
-              display={`${p.after_weight_pct.toFixed(1)}%`}
-              labelWidth={70}
-            />
-          </div>
+          )}
         </>
       )}
 

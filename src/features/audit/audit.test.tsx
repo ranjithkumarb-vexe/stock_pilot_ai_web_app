@@ -131,6 +131,28 @@ describe('eval scoreboard', () => {
     expect(await axe(ev)).toHaveNoViolations();
   });
 
+  it('lists checks that could not be measured as NOT MEASURED, never as passing', async () => {
+    await open('/audit?tab=evals', {
+      evals: {
+        generated_at: '2026-11-01T10:00:00Z',
+        thresholds_met: false,
+        items: [{ id: 'T-A', description: 'a', target: 'x', actual: 'y', status: 'pass' }],
+        not_measured: [
+          {
+            id: 'T-RAG-03b',
+            description: 'Citation support',
+            target: '>= 90%',
+            reason: 'needs a live judge model',
+          },
+        ],
+      },
+    });
+    const nm = await screen.findByTestId('eval-nm-T-RAG-03b');
+    expect(nm).toHaveTextContent('Not measured');
+    expect(nm).toHaveTextContent('needs a live judge model');
+    expect(screen.getByTestId('evals-summary')).toHaveTextContent('1 of 1 passing · 1 not measured');
+  });
+
   it('404 → no run recorded yet', async () => {
     installFetch(path => (path === '/v1/evals/latest' ? err(404) : undefined));
     renderApp('/audit?tab=evals');

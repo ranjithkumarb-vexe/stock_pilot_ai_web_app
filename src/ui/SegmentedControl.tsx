@@ -16,6 +16,8 @@ export function SegmentedControl<V extends string>({ options, value, onChange, t
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   const opts = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
+  // roving tabindex: when the current value is not among the options (e.g. an empty profile field) the first option stays reachable
+  const tabbable = opts.some(o => o.value === value) ? value : opts[0]?.value;
   const onKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     e.preventDefault();
@@ -32,7 +34,7 @@ export function SegmentedControl<V extends string>({ options, value, onChange, t
           type="button"
           role="radio"
           aria-checked={o.value === value}
-          tabIndex={o.value === value ? 0 : -1}
+          tabIndex={o.value === tabbable ? 0 : -1}
           onClick={() => onChange(o.value)}
           onKeyDown={e => onKey(e, i)}
         >

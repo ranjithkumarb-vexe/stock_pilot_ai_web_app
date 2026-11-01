@@ -17,7 +17,7 @@ const user = {
 /** Default responses for the endpoints the shell calls. Return a Response for custom status codes. */
 export const defaultApi: MockRoute = path => {
   if (path === '/v1/me') return { ...user, onboarded: true };
-  if (path === '/v1/market/status') return { open: true, session: 'regular', feed: 'live' };
+  if (path === '/v1/market/status') return { open: true, session: 'regular', feed_state: 'live' };
   if (path === '/v1/portfolio')
     return {
       portfolio_id: 'p',

@@ -127,7 +127,7 @@ export default function Screen() {
 
   const alt = `Candlestick chart of ${symbol || 'the selected symbol'} in 5 minute bars. ${
     price != null
-      ? `Last price ${usd2(price)}${quote ? `, ${quote.change_pct >= 0 ? 'up' : 'down'} ${Math.abs(quote.change_pct).toFixed(2)} percent on the day` : ''}. `
+      ? `Last price ${usd2(price)}${quote?.change_pct != null ? `, ${quote.change_pct >= 0 ? 'up' : 'down'} ${Math.abs(quote.change_pct).toFixed(2)} percent on the day` : ''}. `
       : ''
   }Open the data table for the latest bars.`;
   const rows = bars.slice(-8).reverse();
@@ -196,7 +196,7 @@ export default function Screen() {
 
       <div className="live-layout">
         <div className="live-main">
-          <div className="live-chart-box" role="img" aria-label={alt} data-testid="live-chart-box">
+          <div className="live-chart-box" role="figure" aria-label={alt} data-testid="live-chart-box">
             {symbol && !chartFail && !barsQ.isError && (
               <Suspense fallback={null}>
                 <LiveChart symbol={symbol} bars={bars} onFail={setChartFail} />
@@ -319,7 +319,14 @@ export default function Screen() {
             </span>
           </div>
           {(showTable || chartFail) && (
-            <div id="live-table" className="s3-card s3-table-wrap" style={{ padding: 0 }}>
+            <div
+              id="live-table"
+              className="s3-card s3-table-wrap"
+              style={{ padding: 0 }}
+              tabIndex={0}
+              role="region"
+              aria-label="Latest bars (scrollable)"
+            >
               <table className="s3-table" style={{ minWidth: 420 }} data-testid="live-table">
                 <caption className="sr-only">Latest 5 minute bars for {symbol}</caption>
                 <thead>

@@ -97,6 +97,12 @@ describe('primitives', () => {
     expect(onChange).toHaveBeenCalledWith('TL;DR');
   });
 
+  it('SegmentedControl keeps the first option tabbable when the value matches none (CR-S3-4)', () => {
+    render(<SegmentedControl aria-label="Tone" options={['Plain', 'Direct']} value="" onChange={() => {}} />);
+    expect(screen.getByRole('radio', { name: 'Plain' })).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('radio', { name: 'Direct' })).toHaveAttribute('tabindex', '-1');
+  });
+
   it('Chip exposes aria-pressed; Button defaults to type=button; Pill carries its tone class', () => {
     render(
       <>

@@ -166,7 +166,7 @@ export function enter(el: Element, kind: EnterKind, opts: EnterOptions = {}): St
         run(
           el,
           { y: [6, 0], opacity: [0, 1], filter: ['blur(5px)', 'blur(0px)'] },
-          spr(d, { stiffness: 260, damping: 28 }),
+          spr(d, { stiffness: 260, damping: 33 }), // >= critical damping (2*sqrt(k)): an overshoot makes blur() negative, which browsers reject
         ),
       );
       break;

@@ -70,9 +70,10 @@ export function toBody(d: Draft): OnboardingBody {
     throw new Error('Onboarding draft is incomplete');
   return {
     answers: d.answers.map(a => a as number),
-    horizon: d.horizon,
-    goals: d.goals,
-    experience: d.experience,
+    // values come from the questionnaire lists served by GET /onboarding/questions
+    horizon: d.horizon as OnboardingBody['horizon'],
+    goals: d.goals as OnboardingBody['goals'],
+    experience: d.experience as OnboardingBody['experience'],
     likes: d.likes,
     excludes: d.excludes,
     esg_exclusions: d.esg,

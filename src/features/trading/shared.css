@@ -1,6 +1,7 @@
 /* Shared by the S3 screens (trading, live, alerts, ask, profile, audit). Values mirror the design's inline styles. */
 .s3-screen {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a wide child must scroll inside its card, never widen the page */
   gap: 24px;
 }
 .s3-card {
@@ -106,6 +107,7 @@
 }
 .s3-table-wrap {
   overflow-x: auto;
+  position: relative; /* clips the absolutely positioned .sr-only header text that would otherwise widen the page */
 }
 .s3-table {
   width: 100%;

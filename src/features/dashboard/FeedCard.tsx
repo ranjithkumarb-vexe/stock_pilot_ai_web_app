@@ -118,8 +118,8 @@ function WhyPanel({ f, open, id }: { f: FeedItem; open: boolean; id: string }) {
                 {BASIS_LABEL[why.basis] ?? why.basis}
               </span>
               {why.summary && <Row>{why.summary}</Row>}
-              {why.top_features.map(t => (
-                <Row key={t.name}>
+              {why.top_features.map((t, i) => (
+                <Row key={`${t.name}-${i}`}>
                   <b style={{ color: 'var(--ink)' }}>{t.name}</b>
                   {t.detail ? `: ${t.detail}` : ''}{' '}
                   <span style={{ fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>
@@ -127,8 +127,12 @@ function WhyPanel({ f, open, id }: { f: FeedItem; open: boolean; id: string }) {
                   </span>
                 </Row>
               ))}
-              {why.rules_checked.map(r => (
-                <Row key={r.rule} mark={r.passed ? '✓' : '✗'} tone={r.passed ? 'var(--gain)' : 'var(--loss)'}>
+              {why.rules_checked.map((r, i) => (
+                <Row
+                  key={`${r.rule}-${i}`}
+                  mark={r.passed ? '✓' : '✗'}
+                  tone={r.passed ? 'var(--gain)' : 'var(--loss)'}
+                >
                   Rule checked: {r.rule} {r.passed ? '(passed)' : '(not passed)'}
                 </Row>
               ))}

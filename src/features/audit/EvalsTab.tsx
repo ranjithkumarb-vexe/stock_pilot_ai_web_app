@@ -24,6 +24,13 @@ export function EvalsTab() {
   }
   const items = q.data?.items ?? [];
   const pass = items.filter(e => e.status === 'pass').length;
+  // checks that need something we do not have (e.g. a live judge model) are listed as NOT MEASURED, never as passing
+  const unmeasured = (q.data?.not_measured ?? []).map(n => ({
+    id: String(n.id ?? ''),
+    description: String(n.description ?? ''),
+    target: String(n.target ?? ''),
+    reason: String(n.reason ?? ''),
+  }));
   const when = q.data?.generated_at ? new Date(q.data.generated_at) : null;
   return (
     <section className="s3-card" style={{ padding: 0, gap: 0 }} aria-labelledby="evals-h" data-testid="evals">
@@ -41,7 +48,7 @@ export function EvalsTab() {
           Eval scoreboard
         </h2>
         <span className="s3-sub" data-testid="evals-summary">
-          {pass} of {items.length} passing ·{' '}
+          {pass} of {items.length} passing{unmeasured.length ? ` · ${unmeasured.length} not measured` : ''} ·{' '}
           {q.data?.thresholds_met ? 'thresholds met' : 'thresholds not met'}
           {when && !Number.isNaN(when.getTime())
             ? ` · last run ${when.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}`
@@ -53,7 +60,7 @@ export function EvalsTab() {
           No eval results in the latest run.
         </div>
       ) : (
-        <div className="s3-table-wrap">
+        <div className="s3-table-wrap" tabIndex={0} role="region" aria-label="Eval results (scrollable)">
           <table className="s3-table" style={{ minWidth: 720 }}>
             <caption className="sr-only">Latest eval results</caption>
             <thead>
@@ -84,6 +91,20 @@ export function EvalsTab() {
               ))}
             </Stagger>
           </table>
+        </div>
+      )}
+      {unmeasured.length > 0 && (
+        <div style={{ padding: '14px 18px 18px', display: 'grid', gap: 8 }} data-testid="evals-not-measured">
+          <h3 className="s3-h2" style={{ fontSize: 13, margin: 0 }}>
+            Not measured
+          </h3>
+          {unmeasured.map(n => (
+            <div key={n.id} data-testid={`eval-nm-${n.id}`} style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+              <span style={{ font: '500 12px var(--mono)', color: 'var(--info)' }}>{n.id}</span>{' '}
+              {n.description}
+              {n.target ? ` (target ${n.target})` : ''}. <Pill tone="n">Not measured</Pill> {n.reason}
+            </div>
+          ))}
         </div>
       )}
     </section>

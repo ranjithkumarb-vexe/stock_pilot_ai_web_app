@@ -95,6 +95,11 @@
   padding: 0 8px;
   border-radius: 999px;
   white-space: nowrap;
+  /* a long label (e.g. a source name) must never widen the page on a phone */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   font:
     600 11px/22px 'Geist',
     system-ui,

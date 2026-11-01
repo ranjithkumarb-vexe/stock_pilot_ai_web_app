@@ -13,13 +13,18 @@ const poly = (s: number[], mn: number, mx: number) =>
     )
     .join(' ');
 
-/** Design equity-curve card. Series come from the API; equity is rebased to 100 only so it shares an axis with `spy_norm`. */
+/** Index a series to 100 at its first positive value. The API indexes BOTH `equity` and `spy_norm` to the starting equity (not 100). */
+export const rebase100 = (values: number[]): number[] => {
+  const base = values.find(v => v > 0) ?? 1;
+  return values.map(v => (v / base) * 100);
+};
+
+/** Design equity-curve card. Series come from the API; both lines are rebased to 100 so they share one axis. */
 export function EquityCurve({ perf }: { perf: PortfolioPerformance }) {
   const gid = `ag${useId().replace(/:/g, '')}`;
   const series = perf.series ?? [];
-  const base = series[0]?.equity || 1;
-  const a = series.map(p => (p.equity / base) * 100);
-  const b = series.map(p => p.spy_norm);
+  const a = rebase100(series.map(p => p.equity));
+  const b = rebase100(series.map(p => p.spy_norm));
   const all = [...a, ...b];
   const mn = Math.min(...all);
   const mx = Math.max(...all);

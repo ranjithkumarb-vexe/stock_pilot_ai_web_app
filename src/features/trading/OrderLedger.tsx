@@ -58,7 +58,7 @@ export function OrderLedger() {
           No orders yet. Place a paper order above.
         </div>
       ) : (
-        <div className="s3-table-wrap">
+        <div className="s3-table-wrap" tabIndex={0} role="region" aria-label="Paper orders (scrollable)">
           <table className="s3-table" style={{ minWidth: 820 }}>
             <caption className="sr-only">Paper orders, newest first</caption>
             <thead>

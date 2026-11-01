@@ -44,7 +44,10 @@ export default function Screen() {
     );
 
   return (
-    <div data-testid="screen-proposals" style={{ display: 'grid', gap: 16 }}>
+    <div
+      data-testid="screen-proposals"
+      style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}
+    >
       <div
         style={{
           display: 'flex',

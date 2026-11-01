@@ -166,7 +166,9 @@ describe('banners', () => {
 
   it('shows STALE DATA when the feed is stale during market hours', async () => {
     installFetch(path =>
-      path === '/v1/market/status' ? { open: true, session: 'regular', feed: 'stale' } : defaultApi(path, {}),
+      path === '/v1/market/status'
+        ? { open: true, session: 'regular', feed_state: 'stale' }
+        : defaultApi(path, {}),
     );
     const { router } = renderApp('/dashboard');
     await screen.findByTestId('app-shell');

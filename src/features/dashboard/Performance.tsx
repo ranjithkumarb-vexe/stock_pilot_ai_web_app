@@ -152,7 +152,7 @@ export function Performance() {
               <Stat label="YTD" value={pct(s.ytd_pct)} color={signColor(s.ytd_pct)} />
               <Stat label="S&P 500 YTD" value={pct(s.spy_pct)} color={signColor(s.spy_pct)} />
               <Stat label="Volatility" value={pctPlain(s.vol_pct)} />
-              <Stat label="Beta" value={s.beta.toFixed(2)} />
+              <Stat label="Beta" value={s.beta == null ? '–' : s.beta.toFixed(2)} />
               <Stat label="Max drawdown" value={pctPlain(s.max_drawdown_pct)} />
               <Stat label="Win rate" value={pctPlain(s.win_rate_pct, 0)} />
             </dl>

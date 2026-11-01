@@ -52,7 +52,7 @@ export function useShellStatus() {
     if (!marketKnown) state = 'unknown';
     else if (!open) state = 'closed';
     else if (stream.state !== 'connected') state = 'reconnecting';
-    else state = m?.feed ?? 'live';
+    else state = m?.feed_state ?? 'live';
     const view: FeedView = { state, ...TABLE[state] };
     return {
       marketKnown,

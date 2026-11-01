@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { describeError } from '@/api/errors';
 import { newIdempotencyKey, useCreateOrder, usePreviewOrder } from '@/api/hooks/orders';
-import type { FeedState, MarketStatus, Order, OrderCheck, OrderRequest, OrderResponse } from '@/api/types';
+import type {
+  FeedState,
+  MarketStatus,
+  Order,
+  OrderCheck,
+  OrderPreview,
+  OrderRequest,
+  OrderResponse,
+} from '@/api/types';
 import { useToast } from '@/ui';
 import { useTrack } from '@/telemetry';
 import { num, usd2 } from './format';
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Shapes the contract leaves open. CONTRACT.md types `fill` / extra order fields as free-form; we read the likely keys
- * defensively and render "—" when the API does not send them. UNVERIFIED until the orders module publishes OpenAPI.
+ * Preview estimate: the backend puts it on `order` (`est_price`, `est_cost`, `est_cash_after`); `fill` is null on a
+ * preview. After a placed order the real fill is `fill.price`. Verified against the live API on 2026-11-01.
  * ---------------------------------------------------------------------------------------------------------------- */
 const first = (o: Record<string, unknown> | null | undefined, keys: string[]): number | null => {
   if (!o) return null;
@@ -22,17 +30,13 @@ const first = (o: Record<string, unknown> | null | undefined, keys: string[]): n
 export type Estimate = { fillPrice: number | null; value: number | null; cashAfter: number | null };
 
 /** Estimated fill / order value / cash after, as computed by the backend preview (never recomputed here). */
-export function readEstimate(res: OrderResponse | null | undefined): Estimate {
-  const fill = res?.fill ?? null;
+export function readEstimate(res: OrderPreview | OrderResponse | null | undefined): Estimate {
+  const fill = (res?.fill ?? null) as Record<string, unknown> | null;
   const order = (res?.order ?? null) as Record<string, unknown> | null;
   return {
-    fillPrice:
-      first(fill, ['price', 'fill_price', 'est_price', 'avg_price']) ??
-      first(order, ['fill_price', 'est_fill_price', 'avg_fill_price']),
-    value:
-      first(fill, ['value', 'notional', 'order_value']) ?? first(order, ['value', 'notional', 'order_value']),
-    cashAfter:
-      first(fill, ['cash_after', 'cash_after_order']) ?? first(order, ['cash_after', 'cash_after_order']),
+    fillPrice: first(fill, ['price']) ?? first(order, ['est_price']),
+    value: first(order, ['est_cost']) ?? (fill ? first(fill, ['price']) : null),
+    cashAfter: first(order, ['est_cash_after']),
   };
 }
 
@@ -155,9 +159,5 @@ export function useOrderSubmit() {
   );
 }
 
-/**
- * The live backend names the feed field `feed_state` (CONTRACT.md / FE types guessed `feed`). Read both so screens work
- * against either; see HANDOFF CR-S3-1.
- */
-export const feedOf = (m: MarketStatus | undefined): FeedState | undefined =>
-  (m as (MarketStatus & { feed_state?: FeedState }) | undefined)?.feed_state ?? m?.feed;
+/** The feed state from `GET /market/status` (`feed_state`; CONTRACT.md). */
+export const feedOf = (m: MarketStatus | undefined): FeedState | undefined => m?.feed_state;

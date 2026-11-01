@@ -11,3 +11,4 @@ test-results
 coverage
 .vite
 .playwright-mcp
+.e2e-logs

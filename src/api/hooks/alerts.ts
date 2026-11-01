@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, V1 } from '../client';
 import { qk } from '../keys';
-import type { Alert, AlertAction, Paged } from '../types';
+import type { Alert, AlertAction, AlertsPage } from '../types';
 
 export const useAlerts = (filter: { type?: string; state?: string } = {}, opts: { enabled?: boolean } = {}) =>
   useQuery({
     queryKey: qk.alerts.list(filter),
-    queryFn: ({ signal }) => api.get<Paged<Alert>>(`${V1}/alerts`, { signal, query: filter }),
+    queryFn: ({ signal }) => api.get<AlertsPage>(`${V1}/alerts`, { signal, query: filter }),
     enabled: opts.enabled ?? true,
   });
 

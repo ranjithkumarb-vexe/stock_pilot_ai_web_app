@@ -15,6 +15,7 @@ export default tseslint.config(
       'src/api/schema.d.ts',
       'playwright-report',
       'test-results',
+      '.e2e-logs',
     ],
   },
   {
@@ -26,6 +27,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      // keyboard-scrollable regions (wide tables) must be focusable (axe: scrollable-region-focusable)
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['region'], tags: [] }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },

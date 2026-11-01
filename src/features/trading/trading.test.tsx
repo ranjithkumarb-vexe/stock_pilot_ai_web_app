@@ -64,10 +64,23 @@ function api(opts: Opts = {}): MockRoute {
       };
     if (path === '/v1/orders/preview')
       return {
-        order: null,
-        fill: { price: 182.49, value: 182, cash_after: 99818 },
+        // real shape (verified live 2026-11-01): the estimate is on `order`, `fill` is null on a preview
+        order: {
+          symbol: 'AAPL',
+          side: 'buy',
+          type: 'market',
+          qty: 1,
+          limit_price: null,
+          est_price: 182.49,
+          est_cost: 182.49,
+          est_cash_after: 99817.51,
+          will: 'fill',
+        },
+        fill: null,
         checks: opts.previewChecks ?? [checks.pass],
         blocked: opts.blocked ?? false,
+        hard_blocked: false,
+        market_open: true,
       };
     if (path === '/v1/orders' && method === 'POST')
       return opts.create?.() ?? { order: order(), fill: { price: 182.49 }, checks: [], blocked: false };

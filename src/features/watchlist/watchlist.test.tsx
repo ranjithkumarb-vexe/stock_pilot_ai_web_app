@@ -114,7 +114,7 @@ function setup(over: Record<string, unknown> = {}) {
       return new Response(JSON.stringify({ code: 'not_found', message: 'x', trace_id: 't' }), {
         status: 404,
       });
-    if (path === '/v1/market/status') return { open: true, session: 'regular', feed: 'delayed' };
+    if (path === '/v1/market/status') return { open: true, session: 'regular', feed_state: 'delayed' };
     return undefined;
   };
   return { ...installFetch(handler), writes };

@@ -90,9 +90,9 @@ export function citationForLedger(brief: Brief, key: string): Uuid | null {
   return null;
 }
 
-/** Pinned tile: the ledger entry whose label matches the style card's pinned metric (shape UNVERIFIED), else the first. */
+/** Pinned tile: the ledger entry whose label matches the style card's `metric` (verified live), else the first. */
 export function pinnedKey(brief: Brief, entries: ReturnType<typeof ledgerEntries>): string | null {
-  const want = brief.style_card?.pinned_metric ?? brief.style_card?.metric;
+  const want = brief.style_card?.metric;
   if (typeof want === 'string') {
     const hit = entries.find(([, v]) => v.label.toLowerCase() === want.toLowerCase());
     if (hit) return hit[0];

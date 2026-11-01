@@ -18,7 +18,9 @@ const meta = (t: AuditTrace) =>
   !t.model || t.model === 'n/a' ? t.mode : `${t.model} · ${(t.duration_ms / 1000).toFixed(1)}s`;
 
 /** Waterfall geometry. Presentation only: offsets are cumulative step durations from the API. */
-export function waterfall(steps: AuditTrace['steps']): Array<{ left: number; width: number }> {
+export function waterfall(
+  steps: NonNullable<AuditTrace['steps']> = [],
+): Array<{ left: number; width: number }> {
   const total = steps.reduce((a, s) => a + (Number(s.ms) || 0), 0) || 1;
   let off = 0;
   return steps.map(s => {

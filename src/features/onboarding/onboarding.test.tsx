@@ -53,14 +53,18 @@ const rawQuestions: Array<[string, Array<[string, number]>]> = [
 ];
 const questions: OnboardingQuestions = {
   questions: rawQuestions.map(([text, opts], i) => ({
-    id: `q${i + 1}`,
+    id: i + 1,
     text,
     options: opts.map(([label, score]) => ({ label, score })),
   })),
   tiers: [1, 2, 3, 4, 5].map(t => ({ tier: t, label: `Tier ${t}` })),
+  tier_rules: {},
   horizons: ['Under 1 year', '1-3 years', '3-10 years', '10+ years'],
   experience_levels: ['Beginner', 'Intermediate', 'Advanced'],
+  goals: ['Growth', 'Income', 'Preservation'],
   sectors: ['Technology', 'Healthcare', 'Financials'],
+  esg_exclusions: ['Tobacco', 'Weapons', 'Fossil fuels', 'Gambling'],
+  disclaimer: '',
 };
 const universe = {
   items: ['AAPL', 'MSFT', 'JNJ', 'KO', 'NVDA', 'XOM'].map(symbol => ({
@@ -235,6 +239,27 @@ describe('onboarding flow', () => {
     expect(screen.queryByTestId('onboarding-result')).not.toBeInTheDocument();
     await next();
     expect(await screen.findByTestId('onboarding-result')).toBeInTheDocument();
+  });
+
+  it('shows the server message of a 422 that carries no field list (real API: "Answer 3 is not one of the offered options")', async () => {
+    setup({
+      onboard: () =>
+        new Response(
+          JSON.stringify({
+            code: 'validation_error',
+            message: 'Answer 3 is not one of the offered options',
+            trace_id: 't-9',
+            details: { question: 3 },
+          }),
+          { status: 422 },
+        ),
+    });
+    renderApp('/onboarding');
+    await toWatchlist();
+    await next();
+    const err = await screen.findByTestId('onboarding-server-error');
+    expect(err).toHaveTextContent('Answer 3 is not one of the offered options');
+    expect(err).toHaveTextContent('Reference: t-9');
   });
 
   it('409 means the workspace already exists: explains and offers the dashboard', async () => {

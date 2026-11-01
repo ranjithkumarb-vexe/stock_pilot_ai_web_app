@@ -10,10 +10,10 @@ export function RiskSummary() {
   const violations = q.data?.violations ?? [];
   const rows: Array<[string, string]> = m
     ? [
-        ['Concentration (HHI)', m.hhi.toFixed(3)],
-        ['Effective holdings', m.effective_n.toFixed(1)],
+        ['Concentration (HHI)', m.hhi == null ? '–' : m.hhi.toFixed(3)],
+        ['Effective holdings', m.effective_n == null ? '–' : m.effective_n.toFixed(1)],
         ['Volatility (60d)', pctPlain(m.vol_60d)],
-        ['Beta', m.beta.toFixed(2)],
+        ['Beta', m.beta == null ? '–' : m.beta.toFixed(2)],
         ['Drawdown now', pctPlain(m.drawdown_pct)],
         ['Max drawdown', pctPlain(m.max_drawdown_pct)],
         ['Trades, 7 days', String(m.trades_7d)],

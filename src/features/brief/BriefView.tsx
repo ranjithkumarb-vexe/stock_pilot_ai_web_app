@@ -252,7 +252,7 @@ export function BriefView({ symbol }: { symbol: string }) {
                 style={{
                   font: '500 13px var(--mono)',
                   marginTop: 4,
-                  color: quote.change_pct >= 0 ? 'var(--gain)' : 'var(--loss)',
+                  color: (quote.change_pct ?? 0) >= 0 ? 'var(--gain)' : 'var(--loss)',
                 }}
               >
                 {signedPct(quote.change_pct, 2)}

@@ -1,11 +1,11 @@
 /**
- * API types. Session/me/stream-token/dev-login come from the generated schema (`npm run gen:api` →
- * src/api/schema.d.ts). Everything else is HAND-WRITTEN from docs/workflow/CONTRACT.md because the backend's
- * OpenAPI only covered /healthz, /readyz and the auth/me/account/stream-token endpoints when FE-02 landed. As the
- * backend publishes more endpoints, migrate each type to `components['schemas'][...]` and keep the exported names
- * so hooks and screens do not change.
- *
- * Fields marked UNVERIFIED are not pinned by CONTRACT.md and need a backend confirmation (see HANDOFF change requests).
+ * API types. Wherever the backend OpenAPI publishes a response/request model (quotes, market status, bars,
+ * onboarding, orders, briefs, citations, events, dev controls, auth) the type is DERIVED from the generated
+ * schema (`npm run gen:api` -> src/api/schema.d.ts); keep the exported names so hooks and screens do not change.
+ * The trading-domain routes (portfolio, profile, proposals, watchlist, universe) return untyped objects in
+ * the OpenAPI (`additionalProperties: true`), so those types stay HAND-WRITTEN here, verified against real
+ * responses on 2026-11-01 (docs/workflow/CONTRACT.md). Feed / alerts / chat / audit / evals are not built in the
+ * backend yet: their types are the planned contract shapes (UNVERIFIED).
  * Conventions: snake_case keys, ISO-8601 UTC timestamps, percentages are percent numbers (6.8 = 6.8%).
  */
 
@@ -31,6 +31,8 @@ export const SERVER_ERROR_CODES = [
   'guardrail_blocked',
   'upstream_unavailable',
   'internal',
+  'method_not_allowed',
+  'payload_too_large',
 ] as const;
 export type ServerErrorCode = (typeof SERVER_ERROR_CODES)[number];
 /** Codes the client synthesises when there is no (valid) server body. */
@@ -60,32 +62,18 @@ export type DevLoginResponse = components['schemas']['DevLoginResponse'];
 export type Me = components['schemas']['MeResponse'];
 
 /* ---------------- quotes / market ---------------- */
-export type Session = 'pre' | 'regular' | 'post' | 'closed';
-export type Freshness = 'live' | 'delayed' | 'stale' | 'closed';
-export type Quote = {
-  symbol: string;
-  price: number;
-  prev_close: number;
-  change_pct: number;
-  bid?: number | null;
-  ask?: number | null;
-  ts: ISODateTime;
-  source: string;
-  session: Session;
-  freshness: Freshness;
-};
-export type FeedState = 'live' | 'delayed' | 'stale' | 'reconnecting';
-/** UNVERIFIED shape: CONTRACT.md lists `GET /market/status` without a body. */
-export type MarketStatus = { open: boolean; session: Session; feed?: FeedState; as_of?: ISODateTime };
-export type Bar = {
-  time: number | string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-};
-export type BarsResponse = { symbol: string; interval: '5m' | '1d'; bars: Bar[]; source: string };
+type Schemas = components['schemas'];
+export type Session = Schemas['QuoteOut']['session'];
+export type Freshness = Schemas['QuoteOut']['freshness'];
+/** `prev_close` / `change_pct` are null until the first reference price exists. */
+export type Quote = Schemas['QuoteOut'];
+export type FeedState = Schemas['MarketStatus']['feed_state'];
+export type MarketStatus = Schemas['MarketStatus'];
+/** The backend sends `time` as an ISO-8601 UTC string; the chart normaliser also accepts unix seconds. */
+export type Bar = Omit<Schemas['BarOut'], 'time'> & { time: string | number };
+export type BarsResponse = Omit<Schemas['BarsResponse'], 'bars'> & { bars: Bar[] };
+export type QuotesResponse = Schemas['QuotesResponse'];
+export type DevMarketResponse = Schemas['DevMarketResponse'];
 export type StreamToken = components['schemas']['StreamTokenResponse'];
 
 /* ---------------- universe / watchlist ---------------- */
@@ -96,59 +84,95 @@ export type UniverseItem = {
   industry: string;
   exchange: string;
 };
-export type WatchlistItem = { symbol: string; name?: string; sector?: string; quote: Quote | null };
+export type WatchlistItem = {
+  symbol: string;
+  name: string;
+  sector: string;
+  industry?: string;
+  exchange?: string;
+  added_at?: ISODateTime;
+  quote: Quote | null;
+};
 
 /* ---------------- onboarding / profile ---------------- */
 export type OnboardingQuestions = {
-  questions: Array<{ id: string; text: string; options: Array<{ label: string; score: number }> }>;
+  questions: Array<{ id: number; text: string; options: Array<{ label: string; score: number }> }>;
   tiers: Array<{ tier: number; label: string }>;
+  /** keyed by tier number as a string ("1".."5") */
+  tier_rules: Record<string, RulesObject>;
   horizons: string[];
   experience_levels: string[];
+  goals: string[];
   sectors: string[];
+  esg_exclusions: string[];
+  disclaimer: string;
 };
 export type RulesObject = { pos: number; sec: number; dd: number; trades: number; cash: number };
-export type OnboardingBody = {
-  answers: number[];
-  horizon: string;
-  goals: string[];
-  experience: string;
-  likes: string[];
-  excludes: string[];
-  esg_exclusions: string[];
-  watchlist: string[];
-  region: string;
-  currency: string;
-  starting_cash: number;
-  disclaimer_ack: true;
-};
-export type OnboardingResult = {
-  profile: Record<string, unknown>;
-  risk_tier: number;
-  tier_label: string;
-  explanation: string;
+export type OnboardingBody = Omit<Schemas['OnboardingRequest'], 'disclaimer_ack'> & { disclaimer_ack: true };
+/** `watchlist` is the list of watchlist ITEMS (same shape as GET /watchlist), not symbols. */
+export type OnboardingResult = Omit<Schemas['OnboardingResponse'], 'rules' | 'watchlist'> & {
   rules: RulesObject;
-  watchlist: string[];
+  watchlist: WatchlistItem[];
 };
-export type Interest = { dim: string; weight: number; baseline: number };
+export type Interest = { dim: string; label: string; weight: number; baseline: number };
 export type Memory = { id: Uuid; kind: string; text: string; confidence: number; source: string };
 export type BiasMirror = {
   name: string;
   metric: string;
-  value: number | string;
+  /** display string, e.g. "9 (rule 10)" */
+  value: string;
+  raw?: number | null;
+  n?: number;
   state: 'ok' | 'watch' | 'flag';
 };
+export type ProfileFields = {
+  display_name: string | null;
+  email: string;
+  risk_tier_stated: number;
+  tier_label: string;
+  horizon: string;
+  goals: string[];
+  experience: string;
+  region: string;
+  currency: string;
+  esg_exclusions: string[];
+  likes: string[];
+  excludes: string[];
+  starting_cash: number;
+  disclaimer_ack_at: ISODateTime | null;
+  onboarded_at: ISODateTime | null;
+  created_at: ISODateTime;
+};
+export type StyleCard = {
+  tone?: string;
+  depth?: 'tldr' | 'standard' | 'deep';
+  jargon?: 1 | 2 | 3;
+  length?: string;
+  metric?: string | null;
+  metrics?: string[];
+  language?: string;
+  order?: string[];
+  section_order?: string[];
+  quant_vs_narrative?: number;
+  explicit?: Record<string, unknown>;
+  [k: string]: unknown;
+};
 export type ProfileResponse = {
-  profile: Record<string, unknown>;
-  style_card: Record<string, unknown>;
+  profile: ProfileFields;
+  style_card: StyleCard;
   rules: RulesObject;
+  rule_sources?: Record<string, string>;
   interests: Interest[];
   memories: Memory[];
   bias: BiasMirror[];
   stated_tier: number;
   revealed_tier: number;
   gap_days: number;
+  gap_flag?: boolean;
+  pinned_metrics?: string[];
   recent_events: Array<{ id: string; ts: ISODateTime; type: string; text: string }>;
 };
+export type ProfilePatch = Schemas['ProfilePatch'];
 
 /* ---------------- portfolio ---------------- */
 export type Position = {
@@ -158,7 +182,7 @@ export type Position = {
   qty: number;
   avg_cost: number;
   price: number;
-  change_pct: number;
+  change_pct: number | null;
   value: number;
   weight_pct: number;
   pnl: number;
@@ -173,47 +197,55 @@ export type Portfolio = {
   day_change_pct: number;
   positions: Position[];
   sectors: Array<{ sector: string; value: number; weight_pct: number }>;
+  /** fraction (0.25 = concentrated) */
   hhi: number;
   effective_n: number;
+  as_of?: ISODateTime;
+  /** null for an account without positions */
+  price_source?: string | null;
 };
 export type RuleStatus = 'ok' | 'breach' | 'warn';
 export type PortfolioRisk = {
   metrics: {
-    hhi: number;
-    effective_n: number;
-    vol_60d: number;
-    beta: number;
+    hhi: number | null;
+    effective_n: number | null;
+    vol_60d: number | null;
+    beta: number | null;
     max_drawdown_pct: number;
     drawdown_pct: number;
     trades_7d: number;
   };
-  rules: Array<{ key: string; limit: number; current: number; status: RuleStatus }>;
+  rules: Array<{
+    key: string;
+    limit: number;
+    current: number;
+    status: RuleStatus;
+    subject?: string | null;
+  }>;
   violations: RuleViolation[];
+  flags?: string[];
 };
 export type PortfolioPerformance = {
+  /** `equity` and `spy_norm` are both indexed to the starting equity (not 100) */
   series: Array<{ ts: ISODateTime; equity: number; spy_norm: number }>;
   stats: {
-    ytd_pct: number;
-    spy_pct: number;
-    vol_pct: number;
-    beta: number;
-    drawdown_pct: number;
-    max_drawdown_pct: number;
-    turnover_pct: number;
-    win_rate_pct: number;
-    realized_pnl: number;
+    ytd_pct: number | null;
+    spy_pct: number | null;
+    vol_pct: number | null;
+    beta: number | null;
+    drawdown_pct: number | null;
+    max_drawdown_pct: number | null;
+    turnover_pct: number | null;
+    win_rate_pct: number | null;
+    realized_pnl: number | null;
   };
+  window?: { start: ISODateTime; end: ISODateTime; points: number };
+  flags?: string[];
 };
 
 /* ---------------- proposals ---------------- */
 export type ProposalStatus = 'pending' | 'approved' | 'rejected' | 'modified' | 'expired' | (string & {});
-export type Why = {
-  summary: string;
-  top_features: Array<{ name: string; weight: number; detail: string }>;
-  rules_checked: Array<{ rule: string; passed: boolean }>;
-  sources: string[];
-  basis: 'profile' | 'behaviour' | 'cold_start';
-};
+export type Why = Schemas['WhyOut'];
 export type Proposal = {
   id: Uuid;
   kind: 'trade' | 'review';
@@ -223,15 +255,20 @@ export type Proposal = {
   title: string;
   body: string;
   rationale: string[];
-  rules_checked: Array<{ rule: string; passed: boolean } | string>;
+  rules_checked: Array<{ rule: string; passed: boolean; detail?: string } | string>;
   suggested_qty: number;
-  current_weight_pct: number;
-  after_weight_pct: number;
-  cap_pct: number;
+  current_weight_pct: number | null;
+  after_weight_pct: number | null;
+  cap_pct: number | null;
   sources: string[];
   status: ProposalStatus;
   expires_at: ISODateTime;
   created_at: ISODateTime;
+  decided_at?: ISODateTime | null;
+  reject_reason?: RejectReason | null;
+  modified_qty?: number | null;
+  executed_qty?: number | null;
+  order_id?: Uuid | null;
   disclaimer: string;
   why?: Why;
 };
@@ -243,124 +280,55 @@ export type ProposalDecision = {
 };
 
 /* ---------------- orders ---------------- */
-export type OrderSide = 'buy' | 'sell';
-export type OrderType = 'market' | 'limit';
-export type OrderStatus = 'queued' | 'working' | 'filled' | 'cancelled' | 'expired' | 'rejected';
-export type OrderRequest = {
-  symbol: string;
-  side: OrderSide;
-  type: OrderType;
-  qty: number;
+export type OrderSide = Schemas['OrderRequest']['side'];
+export type OrderType = Schemas['OrderRequest']['type'];
+export type OrderStatus = Schemas['OrderOut']['status'];
+export type OrderRequest = Omit<Schemas['OrderRequest'], 'override' | 'limit_price' | 'proposal_id'> & {
   limit_price?: number;
   proposal_id?: Uuid;
   override?: boolean;
 };
-export type Order = {
-  id: Uuid;
-  symbol: string;
-  side: OrderSide;
-  type: OrderType;
-  qty: number;
-  limit_price?: number | null;
-  status: OrderStatus;
-  source?: string;
-  created_at: ISODateTime;
-  [k: string]: unknown;
-};
-export type OrderCheck = {
-  key: string;
-  ok: boolean;
-  severity: 'pass' | 'note' | 'blocked';
-  label: string;
-  detail: string;
-};
-export type OrderResponse = {
-  order: Order | null;
-  fill: Record<string, unknown> | null;
-  checks: OrderCheck[];
-  blocked: boolean;
-};
+export type Order = Schemas['OrderOut'];
+export type Fill = Schemas['FillOut'];
+export type OrderCheck = Schemas['CheckOut'];
+/** `POST /orders` response. The preview has the same envelope plus `hard_blocked`/`market_open` (see `OrderPreview`). */
+export type OrderResponse = Schemas['PlaceResponse'];
+export type OrderPreview = Schemas['PreviewResponse'];
 
 /* ---------------- alerts / feed ---------------- */
-export type AlertType = 'breach' | 'filing' | 'move' | 'earnings' | 'mirror' | 'concentration';
-export type AlertState = 'new' | 'read' | 'dismissed' | 'snoozed' | (string & {});
-export type Alert = {
-  id: Uuid;
-  type: AlertType;
-  symbol: string | null;
-  critical: boolean;
-  materiality: number;
-  title: string;
-  body: string;
-  source_label: string;
-  state: AlertState;
-  created_at: ISODateTime;
-  why?: Why;
-};
-export type AlertAction = 'open' | 'dismiss' | 'snooze';
+export type AlertType = Schemas['AlertOut']['type'];
+/** `opened` once the user opened it (the FE used to guess `read`). */
+export type AlertState = Schemas['AlertOut']['state'];
+export type Alert = Omit<Schemas['AlertOut'], 'why'> & { why?: Why | null };
+export type AlertAction = Schemas['AlertActionIn']['action'];
+/** `GET /alerts`: `move_threshold` (unusual-move %), `fatigue_index` and `min_materiality` come from the server. */
+export type AlertsPage = Omit<Schemas['AlertsPage'], 'items'> & { items: Alert[] };
 export type FeedItem =
   | { kind: 'alert'; id: Uuid; pinned: boolean; score: number; item: Alert; why: Why }
   | { kind: 'proposal'; id: Uuid; pinned: boolean; score: number; item: Proposal; why: Why }
   | { kind: 'briefing'; id: Uuid; pinned: boolean; score: number; item: Record<string, unknown>; why: Why };
 
 /* ---------------- briefs ---------------- */
-export type BriefSection = {
-  key: 'trend' | 'bal' | 'val' | 'moat' | 'risk' | 'cat' | 'bb' | (string & {});
-  title: string;
-  source_label: string;
-  claims: Array<{ text: string; citation_ids: Uuid[]; ledger_refs: string[] }>;
-  rows: Array<{ label: string; value: string; source: string }>;
-  plain_hint: string | null;
-};
-export type Brief = {
-  id: Uuid;
-  symbol: string;
-  name: string;
-  as_of: ISODateTime;
-  generated_at: ISODateTime;
-  status: 'ok' | 'degraded';
-  stale: boolean;
-  stale_reason: string | null;
-  style_card: Record<string, unknown>;
-  section_order: string[];
-  sections: BriefSection[];
-  bull: { text: string; citation_ids: Uuid[] };
-  bear: { text: string; citation_ids: Uuid[] };
-  ledger: Record<
-    string,
-    { label: string; value: number | string; display: string; unit: string; source: string }
-  >;
-  citations_summary: { coverage_pct: number; unverified_numbers: number };
-  disclaimer: string;
-  trace_id: string;
-};
-export type Citation = {
-  id: Uuid;
-  kind: 'chunk' | 'xbrl' | 'price';
-  title: string;
-  company: string;
-  doc_label: string;
-  accession_no: string;
-  filed_at: ISODateTime | null;
-  fetched_at: ISODateTime;
-  sha256: string;
-  url: string;
-  excerpt: string;
-  rows: Array<{ label: string; value: string; source: string }>;
-};
+export type BriefSection = Schemas['SectionOut'];
+export type Brief = Schemas['BriefOut'];
+export type Citation = Schemas['CitationOut'];
 
 /* ---------------- chat ---------------- */
-export type ChatRequest = { message: string; thread_id?: Uuid };
-export type ChatResponse = {
-  id: Uuid;
-  thread_id: Uuid;
-  answer: string;
-  citations: unknown[];
-  refused: boolean;
-  refusal_reason: string | null;
-  trace_id: string;
+export type ChatRequest = Schemas['ChatRequest'];
+/** `citations` items are free-form objects, see `ChatCitation` (ids are NOT uuids: `xbrl:NVDA:equity:<accession>`, `portfolio:paper`). */
+export type ChatResponse = Schemas['ChatResponse'];
+export type ChatCitation = {
+  id: string;
+  kind: string;
+  n?: number;
+  label?: string;
+  symbol?: string;
+  doc_label?: string;
+  accession_no?: string;
+  period_end?: string;
+  url?: string;
+  route?: string;
 };
-/** UNVERIFIED: CONTRACT.md names `GET /chat/history` without a shape. */
 export type ChatHistory = {
   items: Array<{
     id: Uuid;
@@ -369,33 +337,16 @@ export type ChatHistory = {
     text: string;
     created_at: ISODateTime;
     refused?: boolean;
+    refusal_reason?: string | null;
+    citations?: ChatCitation[];
+    trace_id?: string | null;
   }>;
+  next_cursor?: string | null;
 };
 
 /* ---------------- audit ---------------- */
-export type AuditTrace = {
-  id: string;
-  name: string;
-  model: string;
-  mode: string;
-  duration_ms: number;
-  tokens_in: number;
-  tokens_out: number;
-  cost_usd: number;
-  outcome: 'ok' | 'blocked' | 'error';
-  steps: Array<{ name: string; ms: number; outcome: string; detail: string }>;
-};
-export type EvalsLatest = {
-  generated_at: ISODateTime;
-  thresholds_met: boolean;
-  items: Array<{
-    id: string;
-    description: string;
-    target: number | string;
-    actual: number | string;
-    status: 'pass' | 'fail';
-  }>;
-};
+export type AuditTrace = Schemas['TraceOut'];
+export type EvalsLatest = Schemas['EvalsLatest'];
 
 /* ---------------- events (telemetry, SPEC §10.2) ---------------- */
 export type TelemetryEventType =
@@ -438,7 +389,7 @@ export type TelemetryEvent = {
   client: { device: 'desktop' | 'tablet' | 'mobile'; tz: string };
   schema_version: number;
 };
-export type EventsResponse = { accepted: number; rejected: Array<{ index: number; reason: string }> };
+export type EventsResponse = Schemas['EventsResponse'];
 
 /* ---------------- lists ---------------- */
 export type Paged<T> = { items: T[]; next_cursor: string | null };

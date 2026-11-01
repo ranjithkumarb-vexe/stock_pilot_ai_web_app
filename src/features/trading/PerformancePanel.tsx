@@ -36,17 +36,23 @@ export function PerformancePanel() {
   const { pf, spy } = toPoints(perf.data?.series ?? []);
   const area = pf.length ? `${poly(pf)} ${W},${H} 0,${H}` : '';
 
+  const vsSpy =
+    stats && stats.ytd_pct != null && stats.spy_pct != null ? stats.ytd_pct - stats.spy_pct : null;
   const metrics: Array<{ l: string; v: string; col: string }> = stats
     ? [
         { l: 'Total return', v: pct(stats.ytd_pct), col: toneVar(stats.ytd_pct) },
         {
           l: 'vs S&P 500',
-          v: pct(stats.ytd_pct - stats.spy_pct),
-          col: toneVar(stats.ytd_pct - stats.spy_pct),
+          v: pct(vsSpy),
+          col: toneVar(vsSpy),
         },
-        { l: 'Win rate', v: `${stats.win_rate_pct}%`, col: 'var(--ink)' },
+        { l: 'Win rate', v: stats.win_rate_pct == null ? DASH : `${stats.win_rate_pct}%`, col: 'var(--ink)' },
         { l: 'Realized P&L', v: signedUsd0(stats.realized_pnl), col: toneVar(stats.realized_pnl) },
-        { l: 'Turnover (annual)', v: `${stats.turnover_pct}%`, col: 'var(--ink)' },
+        {
+          l: 'Turnover (annual)',
+          v: stats.turnover_pct == null ? DASH : `${stats.turnover_pct}%`,
+          col: 'var(--ink)',
+        },
         { l: 'Trades, 7 days', v: risk.data ? int(risk.data.metrics.trades_7d) : DASH, col: 'var(--ink)' },
       ]
     : [];

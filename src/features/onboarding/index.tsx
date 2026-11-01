@@ -254,7 +254,9 @@ function Flow({ questions }: { questions: OnboardingQuestions }) {
                   </span>
                 ))}
                 {serverError.serverMessage &&
-                  serverError.code !== 'validation_error' &&
+                  (serverError.code !== 'validation_error' ||
+                    (Object.keys(serverError.fieldErrors).length === 0 &&
+                      serverError.serverMessage !== 'Request validation failed')) &&
                   !alreadyOnboarded && (
                     <span style={{ color: 'var(--ink-2)', fontWeight: 400 }}>
                       {serverError.serverMessage}
