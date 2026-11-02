@@ -7,7 +7,13 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: { port: 5173, strictPort: false },
-  build: { sourcemap: true, target: 'es2022' },
+  build: {
+    // Production decision (FE-12): NO source maps in the deployed bundle (they would be public next to the JS and expose
+    // the source). Opt in with BUILD_SOURCEMAP=hidden when an error tracker is wired up: `hidden` writes .map files without
+    // the //# sourceMappingURL comment, upload them to the tracker and delete them from dist before publishing.
+    sourcemap: process.env.BUILD_SOURCEMAP === 'hidden' ? 'hidden' : false,
+    target: 'es2022',
+  },
   test: {
     globals: true,
     environment: 'jsdom',

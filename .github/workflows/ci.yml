@@ -1,0 +1,86 @@
+name: ci
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Same values as .env.production.example: the build must succeed and satisfy the CSP/env checks with the template.
+      VITE_API_BASE_URL: https://stockpilot-api.onrender.com
+      VITE_AUTH_MODE: supabase
+      VITE_SUPABASE_URL: https://your-project-ref.supabase.co
+      VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: lint
+        run: npm run lint
+      - name: typecheck
+        run: npm run typecheck
+      - name: prettier (source, e2e, scripts)
+        run: npx prettier --check src e2e scripts
+      - name: unit + component tests (vitest)
+        run: npm run test
+      - name: generated API types are in sync with contracts/openapi.json
+        run: |
+          npm run gen:api
+          git diff --exit-code src/api/schema.d.ts
+      - name: build
+        run: npm run build
+      - name: bundle-size budget
+        run: npm run check:bundle
+      - name: CSP / env consistency (vercel.json vs the build)
+        run: npm run check:deploy
+      - name: npm audit (production dependencies, high and above)
+        run: npm run audit:prod
+      - name: install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: deploy smoke under the vercel.json CSP
+        run: npm run e2e:deploy
+      - name: upload Playwright output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-deploy-output
+          path: |
+            test-results-deploy
+            .e2e-logs
+          if-no-files-found: ignore
+
+  # Contract drift against the backend repo. Needs a read-only token for the (private) backend repository in the
+  # BACKEND_REPO_TOKEN secret; without it this job is skipped and the in-repo "types in sync" step above is the only check.
+  contract:
+    runs-on: ubuntu-latest
+    env:
+      HAS_BACKEND_TOKEN: ${{ secrets.BACKEND_REPO_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.HAS_BACKEND_TOKEN == 'true'
+      - uses: actions/checkout@v4
+        if: env.HAS_BACKEND_TOKEN == 'true'
+        with:
+          repository: ranjithkumarb-vexe/stock_pilot_ai_backend_service
+          ref: develop
+          token: ${{ secrets.BACKEND_REPO_TOKEN }}
+          path: backend
+      - name: contract matches the backend's docs/contracts/openapi.json
+        if: env.HAS_BACKEND_TOKEN == 'true'
+        run: BACKEND_REPO="$GITHUB_WORKSPACE/backend" bash scripts/check_contract.sh
+      - name: skipped (no BACKEND_REPO_TOKEN secret)
+        if: env.HAS_BACKEND_TOKEN != 'true'
+        run: echo "contract drift check skipped - add the BACKEND_REPO_TOKEN secret to enable it"

@@ -40,7 +40,8 @@ test('dashboard: real portfolio health, rule breaches, proposals badge, feed wit
   const errors = watchErrors(page, [/404 GET \/v1\/(alerts|audit|evals)/]);
   await signIn(page, 'priya');
   await expect(page.getByTestId('dash-hero')).toBeVisible();
-  await expect(page.getByTestId('dash-headline-text')).toContainText('$99,9');
+  // total value = cash + positions at the SIMULATED live quotes: ~$100k, but the drift vs the last close depends on the day
+  await expect(page.getByTestId('dash-headline-text')).toContainText(/\$(?:99|100),\d{3}/);
   await expect(page.getByTestId('dash-tiles')).toContainText('$22,014'); // cash
   // Priya is over her 10% position cap (JNJ) and 25% sector cap (Consumer Staples)
   await expect(page.getByTestId('rule-row-pos')).toContainText('Breached');

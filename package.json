@@ -19,7 +19,11 @@
     "gen:api": "bash scripts/gen_api.sh",
     "check:contract": "bash scripts/check_contract.sh",
     "e2e": "bash scripts/e2e.sh",
-    "e2e:pw": "playwright test"
+    "e2e:pw": "playwright test",
+    "e2e:deploy": "bash scripts/e2e_deploy.sh",
+    "check:bundle": "node scripts/check_bundle_size.mjs",
+    "check:deploy": "node scripts/check_deploy.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type APIResponse, type Page, type Route } from '@playwright/test';
 import { API, resetSimulators, shot, signIn, token } from '../support/live';
 
 /**
@@ -169,12 +169,18 @@ test('the REAL rate limiter answers 429 with Retry-After and the error body the 
 }) => {
   const t = await token(request, 'priya');
   await new Promise(r => setTimeout(r, 12_000)); // let the user bucket refill completely after the previous tests
-  const rs = await Promise.all(
-    Array.from({ length: Number(process.env.E2E_USER_BURST ?? 120) + 40 }, () =>
-      request.get(`${API}/v1/me`, { headers: { Authorization: `Bearer ${t}` } }),
-    ),
-  );
-  const limited = rs.filter(r => r.status() === 429);
+  // Fire in modest concurrent batches (hundreds of simultaneous sockets overflow the local listen backlog and
+  // produce ECONNRESET, which is a harness problem, not a rate-limit result) until the bucket runs dry.
+  const burst = Number(process.env.E2E_USER_BURST ?? 120);
+  const limited: APIResponse[] = [];
+  for (let sent = 0; sent < burst + 600 && limited.length === 0; sent += 30) {
+    const batch = await Promise.all(
+      Array.from({ length: 30 }, () =>
+        request.get(`${API}/v1/me`, { headers: { Authorization: `Bearer ${t}` } }),
+      ),
+    );
+    limited.push(...batch.filter(r => r.status() === 429));
+  }
   expect(limited.length, 'user bucket must run dry').toBeGreaterThan(0);
   expect(Number(limited[0].headers()['retry-after'])).toBeGreaterThan(0);
   const body = await limited[0].json();

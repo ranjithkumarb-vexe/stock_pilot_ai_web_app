@@ -10,6 +10,7 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:5180';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /deploy-smoke\.spec\.ts/, // run by playwright.deploy.config.ts (npm run e2e:deploy)
   timeout: 90_000,
   expect: { timeout: 10_000 },
   // the live journeys mutate one shared dev database (personas, market overrides): run them one at a time

@@ -26,8 +26,9 @@ trap cleanup EXIT
 free_port "$API_PORT"; free_port "$WEB_PORT"; sleep 1
 
 echo "e2e: migrating + re-seeding the dev database ..."
-( cd "$BACKEND_REPO" && uv run python -m app.core.migrate >"$LOG_DIR/e2e-migrate.log" 2>&1 \
-  && uv run python -m scripts.seed --reset >"$LOG_DIR/e2e-seed.log" 2>&1 ) || {
+# AUTH_MODE has no default in the backend any more (SEC-03): the throw-away run chooses dev auth explicitly.
+( cd "$BACKEND_REPO" && AUTH_MODE=dev uv run python -m app.core.migrate >"$LOG_DIR/e2e-migrate.log" 2>&1 \
+  && AUTH_MODE=dev uv run python -m scripts.seed --reset >"$LOG_DIR/e2e-seed.log" 2>&1 ) || {
   echo "e2e: migrate/seed failed, see $LOG_DIR/e2e-migrate.log and e2e-seed.log"; exit 2; }
 
 echo "e2e: starting backend on :$API_PORT ..."

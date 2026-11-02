@@ -88,10 +88,8 @@ test('edit profile fields and rules (loosening warns), export, reset, then delet
   await expect(page).toHaveURL(/\/signin$/);
   expect(await page.evaluate(() => sessionStorage.getItem('sp-session'))).toBeNull();
 
-  // the old token still verifies (dev JWT) but the account's data is gone: a blank, un-onboarded user row is re-created
-  const me = await (await page.request.get(`${API}/v1/me`, { headers })).json();
-  expect(me.onboarded).toBe(false);
-  expect((await page.request.get(`${API}/v1/profile`, { headers })).status()).toBe(404);
-  expect((await page.request.get(`${API}/v1/watchlist`, { headers })).status()).toBe(200);
-  expect((await (await page.request.get(`${API}/v1/watchlist`, { headers })).json()).items).toEqual([]);
+  // SEC-13: the deleted account's access token is dead (tombstone); it can no longer re-create a blank account
+  const stale = await page.request.get(`${API}/v1/me`, { headers });
+  expect(stale.status()).toBe(401);
+  expect((await page.request.get(`${API}/v1/watchlist`, { headers })).status()).toBe(401);
 });

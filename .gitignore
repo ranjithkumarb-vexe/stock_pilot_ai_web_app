@@ -12,3 +12,6 @@ coverage
 .vite
 .playwright-mcp
 .e2e-logs
+.env.production
+dist-smoke
+test-results-deploy

@@ -1,24 +1,26 @@
 # Project status — web app
 
-_Last updated: 2026-10-31 by orchestrator._
+_Last updated: 2026-11-02 by the BE-22 hardening agent (after REL-01)._
 
 ## Summary
-Workflow scaffolding committed. Wave 1 (foundation) in progress. Nothing is production-ready yet.
+All 13 web tasks are `done` (FE-01..FE-12, INT-01..INT-03; 0 partial, 0 todo). Verified here: `npm run lint`, `typecheck`, `test` (280 vitest), `build`, `check:bundle`, `check:deploy`, `audit:prod` (no high), live cross-repo `npm run e2e` (**38 specs green against the real backend, re-run 2026-11-02 after the backend hardening**) and `npm run e2e:deploy` (6/6 under the real `vercel.json` CSP, INT-03). Release verdict is in the backend repo's `docs/RELEASE.md` (pointer: `docs/RELEASE.md` here): **NOT READY by the written gate** (backend QA-01 todo, five backend tasks partial pending live services, RUNBOOK hosted parts unexecuted); the web side has no open blockers. This pass changed three e2e specs that encoded old behaviour (`account`, `streams`, `priya`) and `scripts/e2e.sh` (`AUTH_MODE=dev` for the migrate/seed steps; the backend no longer defaults it). The backend now requires `aal2` (TOTP) tokens in production: the SPA already gates on AAL2.
 
-## Gate table
+## Gate table (details: backend `docs/RELEASE.md`)
 | Gate | State |
 |---|---|
-| Foundation (scaffold, schema, auth) | not started |
-| Domain features | not started |
-| Cross-repo E2E | not started |
-| Security review | not started |
-| Release readiness | not started |
+| Foundation (scaffold, API layer, shell) | done |
+| Screens (13) wired to the real API | done (live-verified against the backend, INT-02) |
+| Cross-repo E2E | 38 passed (INT-02; re-run 2026-11-02 after BE-22) |
+| Responsive + a11y | done on 360/768/1440, axe both themes (INT-03) |
+| Deploy config (Vercel, CSP, budgets, CI) | written + smoke-tested locally; **not deployed**, GitHub Actions never run |
+| Real Supabase auth (Google + TOTP) | **not exercised** (no project) |
 
 ## Unverified / needs owner
-- Meta Model API key & India access (SPEC §17.1) — not provided; LLM runs in degraded/mock mode until `META_MODEL_API_KEY` is set.
-- Alpaca / Finnhub / FRED keys — not provided; market data runs on a clearly-labelled simulated source.
-- Supabase project (Auth, Google OAuth, MFA) — not provided; `AUTH_MODE=dev` used locally.
-- Docker is not installed on the dev machine — compose/Docker build unverified.
+- Supabase Google OAuth + TOTP MFA flow (code paths unit-tested and the redirect target is allowed by the CSP, nothing more).
+- A real Vercel deployment (rewrite/header syntax per Vercel docs, emulated by `scripts/serve_dist.mjs`); GitHub Actions run of `.github/workflows/ci.yml`.
+- Firefox/Safari, real devices.
+- `react-router-dom` 6.x has 2 moderate advisories (fix is the v7 major): owner decision.
+- Set the real API origin in `vercel.json` `connect-src` and Vercel env vars (`npm run check:deploy` enforces).
 
 ## Sibling repo
 Backend: https://github.com/ranjithkumarb-vexe/stock_pilot_ai_backend_service (local: /Users/ranjithkumar/Desktop/MyMac/BEProjects/stock_pilot_ai_backend_service)
